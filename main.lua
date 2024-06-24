@@ -12,6 +12,7 @@ include "class.Size2D"
 include "class.Ray"
 include "class.Matrix"
 include "include.Pickle"
+include "class.Object3D"
 
 -- GLOBAL VALUES --
 
@@ -35,6 +36,8 @@ sphere={
 	pos=Pos3D(0,0,15),
 	r=5
 }
+
+sphere=Object3D("sphere",Pos3D(0,0,15),5)
 
 light={
 	pos=Pos3D(-5,6,5)
@@ -118,20 +121,9 @@ end
 function renderPixel(x,y)
 	targetpos=screenSpaceToViewportSpace(x,y)
 	r=Ray.fromPoints(camera.pos,targetpos)
-	co=r.pos-sphere.pos
-	a=r.dir:dot(r.dir)
-	b=2*co:dot(r.dir)
-	c=co:dot(co)-(sphere.r*sphere.r)
-	disc=(b*b)-4*a*c
-	if disc<0 then
-		screen.pixels[y][x]=0
-		return
-	end
-	hit1=(-b+math.sqrt(disc))/(2*a)
-	hit2=(-b-math.sqrt(disc))/(2*a)
-	hit=-1
-	if hit2<0 or (hit1>=0 and hit1<hit2) then hit=hit1 end
-	if hit1<0 or (hit2>=0 and hit2<hit1) then hit=hit2 end
+
+	hit=sphere:getHitPoint(r)
+
 	if hit>=0 then
 		local distanceToLight=distBetween3DPoints(translate3D(camera.pos,r.dir,hit),light.pos)
 		if distanceToLight>13 then
