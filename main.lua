@@ -112,7 +112,6 @@ function drawPixels()
 	rectb(95,40,52,52,12)
 end
 
--- could genericize this to a hit() method in an Object3D class?
 function renderPixel(x,y)
 	targetpos=screenSpaceToViewportSpace(x,y)
 	r=Ray.fromPoints(camera.pos,targetpos)
@@ -121,13 +120,11 @@ function renderPixel(x,y)
 
 	if not hit or hit < 0 then
 		screen.pixels[y][x]=0
+	elseif sphere.hasCustomRenderRoutine then
+		screen.pixels[y][x]=sphere:renderColor(r,hit)
 	elseif hit>=0 then
-		local distanceToLight=distBetween3DPoints(translate3D(camera.pos,r.dir,hit),light.pos)
-		if distanceToLight>13 then
-			screen.pixels[y][x]=1
-		else
-			screen.pixels[y][x]=7.5-math.floor(distanceToLight/2)+1
-		end
+		-- checker pattern for missing render routine
+		screen.pixels[y][x]=12+((y%2)+(x%2))%2
 	end
 end
 
