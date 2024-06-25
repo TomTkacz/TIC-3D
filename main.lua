@@ -12,6 +12,7 @@ include "class.Size2D"
 include "class.Ray"
 include "class.Matrix"
 include "include.Pickle"
+include "class.Object3D"
 
 -- GLOBAL VALUES --
 
@@ -31,10 +32,7 @@ viewport={
 	points={}
 }
 
-sphere={
-	pos=Pos3D(0,0,15),
-	r=5
-}
+sphere=Object3D("sphere",Pos3D(0,0,15),5)
 
 light={
 	pos=Pos3D(-5,6,5)
@@ -93,7 +91,7 @@ function distBetween3DPoints(p1,p2)
 	return math.sqrt(delta:dot(delta))
 end
 
-function round(n,d) 
+function round(n,d)
 	return math.floor(n*math.pow(10,d))/math.pow(10,d)
 end
 
@@ -114,33 +112,19 @@ function drawPixels()
 	rectb(95,40,52,52,12)
 end
 
--- could genericize this to a hit() method in an Object3D class?
 function renderPixel(x,y)
 	targetpos=screenSpaceToViewportSpace(x,y)
 	r=Ray.fromPoints(camera.pos,targetpos)
-	co=r.pos-sphere.pos
-	a=r.dir:dot(r.dir)
-	b=2*co:dot(r.dir)
-	c=co:dot(co)-(sphere.r*sphere.r)
-	disc=(b*b)-4*a*c
-	if disc<0 then
+
+	hit=sphere:getHitPoint(r)
+
+	if not hit or hit < 0 then
 		screen.pixels[y][x]=0
-		return
-	end
-	hit1=(-b+math.sqrt(disc))/(2*a)
-	hit2=(-b-math.sqrt(disc))/(2*a)
-	hit=-1
-	if hit2<0 or (hit1>=0 and hit1<hit2) then hit=hit1 end
-	if hit1<0 or (hit2>=0 and hit2<hit1) then hit=hit2 end
-	if hit>=0 then
-		local distanceToLight=distBetween3DPoints(translate3D(camera.pos,r.dir,hit),light.pos)
-		if distanceToLight>13 then
-			screen.pixels[y][x]=1
-		else
-			screen.pixels[y][x]=7.5-math.floor(distanceToLight/2)+1
-		end
-	else
-		screen.pixels[y][x]=0
+	elseif sphere.hasCustomRenderRoutine then
+		screen.pixels[y][x]=sphere:renderColor(r,hit)
+	elseif hit>=0 then
+		-- checker pattern for missing render routine
+		screen.pixels[y][x]=12+((y%2)+(x%2))%2
 	end
 end
 
