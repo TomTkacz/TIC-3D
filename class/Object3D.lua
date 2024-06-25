@@ -17,7 +17,6 @@ function Object3D.mt.__call(self,type,...)
     end
 
     function s:renderColor(ray,hit)
-        if not s.hasCustomRenderRoutine then return end
         return Object3D._renderRoutines[self.type](self,ray,hit)
     end
 
