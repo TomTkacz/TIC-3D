@@ -32,11 +32,6 @@ viewport={
 	points={}
 }
 
-sphere={
-	pos=Pos3D(0,0,15),
-	r=5
-}
-
 sphere=Object3D("sphere",Pos3D(0,0,15),5)
 
 light={
@@ -96,7 +91,7 @@ function distBetween3DPoints(p1,p2)
 	return math.sqrt(delta:dot(delta))
 end
 
-function round(n,d) 
+function round(n,d)
 	return math.floor(n*math.pow(10,d))/math.pow(10,d)
 end
 
@@ -124,15 +119,15 @@ function renderPixel(x,y)
 
 	hit=sphere:getHitPoint(r)
 
-	if hit>=0 then
+	if not hit or hit < 0 then
+		screen.pixels[y][x]=0
+	elseif hit>=0 then
 		local distanceToLight=distBetween3DPoints(translate3D(camera.pos,r.dir,hit),light.pos)
 		if distanceToLight>13 then
 			screen.pixels[y][x]=1
 		else
 			screen.pixels[y][x]=7.5-math.floor(distanceToLight/2)+1
 		end
-	else
-		screen.pixels[y][x]=0
 	end
 end
 

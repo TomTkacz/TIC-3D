@@ -326,8 +326,8 @@ Object3D._hitChecks={}
 
 function Object3D.mt.__call(self,type,...)
 
-    trace("wow")
-    local s=Object3D._inits[type](table.unpack(args))
+    local s={}
+    s=Object3D._inits[type](...)
     s.type=type
     
     function s:getHitPoint(ray)
@@ -342,20 +342,18 @@ setmetatable(Object3D,Object3D.mt)
 
 -- SPHERE --
 
-function Object3D._inits.sphere(self,pos,radius)
-    trace("wow")
+function Object3D._inits.sphere(pos,radius)
     return {pos=pos,r=radius}
 end
 
 function Object3D._hitChecks.sphere(self,ray)
     local r=ray
-    local co=r.pos-sphere.pos
+    local co=r.pos-self.pos
 	local a=r.dir:dot(r.dir)
 	local b=2*co:dot(r.dir)
-	local c=co:dot(co)-(sphere.r*sphere.r)
+	local c=co:dot(co)-(self.r*self.r)
 	local disc=(b*b)-4*a*c
 	if disc<0 then
-		screen.pixels[y][x]=0
 		return
 	end
 	local hit1=(-b+math.sqrt(disc))/(2*a)
@@ -368,7 +366,7 @@ end
 
 -- TRIANGLE --
 
-function Object3D._inits.triangle(self,pos1,pos2,pos3,rot)
+function Object3D._inits.triangle(pos1,pos2,pos3,rot)
 
 end
 
@@ -394,11 +392,6 @@ viewport={
 	size=Size2D(150,150),
 	focalDist=150,
 	points={}
-}
-
-sphere={
-	pos=Pos3D(0,0,15),
-	r=5
 }
 
 sphere=Object3D("sphere",Pos3D(0,0,15),5)
@@ -460,7 +453,7 @@ function distBetween3DPoints(p1,p2)
 	return math.sqrt(delta:dot(delta))
 end
 
-function round(n,d) 
+function round(n,d)
 	return math.floor(n*math.pow(10,d))/math.pow(10,d)
 end
 
@@ -488,15 +481,15 @@ function renderPixel(x,y)
 
 	hit=sphere:getHitPoint(r)
 
-	if hit>=0 then
+	if not hit or hit < 0 then
+		screen.pixels[y][x]=0
+	elseif hit>=0 then
 		local distanceToLight=distBetween3DPoints(translate3D(camera.pos,r.dir,hit),light.pos)
 		if distanceToLight>13 then
 			screen.pixels[y][x]=1
 		else
 			screen.pixels[y][x]=7.5-math.floor(distanceToLight/2)+1
 		end
-	else
-		screen.pixels[y][x]=0
 	end
 end
 

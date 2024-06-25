@@ -6,8 +6,8 @@ Object3D._hitChecks={}
 
 function Object3D.mt.__call(self,type,...)
 
-    trace("wow")
-    local s=Object3D._inits[type](table.unpack(args))
+    local s={}
+    s=Object3D._inits[type](...)
     s.type=type
     
     function s:getHitPoint(ray)
@@ -22,19 +22,18 @@ setmetatable(Object3D,Object3D.mt)
 
 -- SPHERE --
 
-function Object3D._inits.sphere(self,pos,radius)
+function Object3D._inits.sphere(pos,radius)
     return {pos=pos,r=radius}
 end
 
 function Object3D._hitChecks.sphere(self,ray)
     local r=ray
-    local co=r.pos-sphere.pos
+    local co=r.pos-self.pos
 	local a=r.dir:dot(r.dir)
 	local b=2*co:dot(r.dir)
-	local c=co:dot(co)-(sphere.r*sphere.r)
+	local c=co:dot(co)-(self.r*self.r)
 	local disc=(b*b)-4*a*c
 	if disc<0 then
-		screen.pixels[y][x]=0
 		return
 	end
 	local hit1=(-b+math.sqrt(disc))/(2*a)
@@ -47,7 +46,7 @@ end
 
 -- TRIANGLE --
 
-function Object3D._inits.triangle(self,pos1,pos2,pos3,rot)
+function Object3D._inits.triangle(pos1,pos2,pos3,rot)
 
 end
 
