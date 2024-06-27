@@ -116,20 +116,19 @@ if args.outputfile:
 else:
     outputFile = re.findall(r"([^\/]+)(?=[.])",inputFile)[-1]
     
-fileExtension = ".map" if outputFile[-5:] != ".map" else ""
-
-# TODO: check flag to include vertex normals in output file
-with open(outputFile+fileExtension,"wb") as f:
+fileExtension = ".mesh" if outputFile[-5:] != ".mesh" else ""
     
-    f.write( bytes.fromhex( f"{len(facesData):0{2}X}" ) ) # number of faces
-    f.write( bytes.fromhex("00") ) # flags
+# TODO: check flag to include vertex normals in output file
+with open(outputFile+fileExtension,"w") as f:
+    lines = []
     
     for face in facesData:
         for vector in face:
             for i in range(3):
                 dec = floatToThreeByteHex(vector[i])
                 hx = f"{dec:0{6}X}"
-                f.write( bytes.fromhex(hx) )
-
-with open(outputFile+fileExtension,"ab") as f:
-    f.write(bytes(32640-getsize(outputFile+fileExtension)))
+            lines.append(hx)
+                
+    lines.insert(0,f"{len(facesData):0{2}X}") # number of faces
+    lines.insert(1,"00") # flags
+    f.writelines(line + "\n" for line in lines)
