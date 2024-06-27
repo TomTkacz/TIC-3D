@@ -1,11 +1,9 @@
 import re
+import argparse
 
 verticesData=[]
 facesData=[]
 vertexNormalsData=[]
-
-with open("assets/models/cube.obj","r") as f:
-    lines = [line.rstrip() for line in f]
     
 def parseVertexLines(line):
     v=[0,0,0]
@@ -45,18 +43,81 @@ def parseFaceLines(line):
         f.append(verticesData[vertexIndex])
         
     facesData.append(f)
+    
+# allocates 24 bits: 1 sign, 20 base (max 1048575), 3 exponent (max 7)
+def floatToThreeByteHex(n):
+    
+    # constants for bit lengths
+    BASE_BITS = 20
+    EXPONENT_BITS = 3
+
+    # extracting sign
+    sign = 0 if n >= 0 else 1
         
-for line in lines:
-    # checks for .obj line prefixes
-    prefix=re.findall("^[A-Za-z]+",line)
-    if len(prefix) == 0:
-        continue
-    match prefix[0]:
-        case "v":
-            parseVertexLines(line[2:])
-        case "f":
-            parseFaceLines(line[2:])
-        case "vn":
-            parseVertexNormalLines(line[2:])
-            
-print(facesData)
+    wholeNum = abs(int(n))
+    wholeNumLength = len(str(wholeNum)) if wholeNum > 0 else 0
+    decimalNum = int(str(round(abs(n)-wholeNum,7-wholeNumLength)).split(".")[1])
+    decimalNumLength = len(str(decimalNum)) if decimalNum > 0 else 0
+        
+    base = wholeNum*(10**decimalNumLength)+decimalNum
+    exponent = decimalNumLength
+
+    # combine sign, base, and exponent into a single integer
+    result = (sign << (BASE_BITS + EXPONENT_BITS)) | (base << EXPONENT_BITS) | exponent
+
+    return result
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-i", "--inputfile")
+parser.add_argument("-o", "--outputfile")
+args = parser.parse_args()
+
+inputFile=""
+outputFile=""
+
+if args.inputfile:
+    inputFile=args.inputfile
+else:
+    print("You must enter an input file (-i)")
+    exit(1)
+    
+with open(inputFile,"r") as f:
+    
+    lines = [line.rstrip() for line in f]
+    for line in lines:
+        # checks for .obj line prefixes
+        prefix=re.findall("^[A-Za-z]+",line)
+        if len(prefix) == 0:
+            continue
+        match prefix[0]:
+            case "v":
+                parseVertexLines(line[2:])
+            case "f":
+                parseFaceLines(line[2:])
+            case "vn":
+                parseVertexNormalLines(line[2:])
+    
+# if an output file is not provided, name it the same as input file
+if args.outputfile:
+    outputFile = args.outputfile
+else:
+    outputFile = re.findall(r"([^\/]+)(?=[.])",inputFile)[-1]
+    
+fileExtension = ".tobj" if outputFile[-5:] != ".tobj" else ""
+
+# TODO: check flag to include vertex normals in output file
+with open(outputFile+fileExtension,"w") as f:
+    lines = []
+    
+    for face in facesData:
+        for vector in face:
+            for i in range(3):
+                dec = floatToThreeByteHex(vector[i])
+                hx = f"{dec:0{6}X}"
+            lines.append(f"0x{hx[0:2]}")
+            lines.append(f"0x{hx[2:4]}")
+            lines.append(f"0x{hx[4:6]}")
+                
+    lines.insert(0,f"{len(facesData):#0{4}X}") # number of faces
+    lines.insert(1,"0x00") # flags
+    f.writelines(line + "\n" for line in lines)
