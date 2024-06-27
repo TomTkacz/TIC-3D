@@ -1,6 +1,5 @@
 from pathlib import Path
 from os import listdir
-from os.path import getsize
 from subprocess import Popen
 
 meshSourceFileNames = listdir("assets/models")
@@ -36,5 +35,4 @@ for i,lines in enumerate(filesData):
 
 # fills rest of unused 32kb with zeroes
 with open("assets/meshdata/meshdata.map","ab") as f:
-    freeBytes = 32640-getsize("assets/meshdata/meshdata.map")
-    f.write(bytes(freeBytes if freeBytes > 0 else 0))
+    f.write(bytes(int(freeBytes) if freeBytes > 0 else 0))
