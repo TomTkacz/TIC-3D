@@ -1,5 +1,7 @@
 import re
 import argparse
+from os import listdir
+from os.path import getsize
 
 verticesData=[]
 facesData=[]
@@ -23,10 +25,14 @@ def parseFaceLines(line):
     
     f=[]
     
-    # given 1/2/3, should only capture 1 and 3 (may break if middle num is >99)
+    # given 1/2/3, should only capture 1 and 3
     # given 1//2,  should capture both 1 and 2
     # given 1/2,   should only capture 1
-    nums=re.findall(r"[0-9]+(?=//)|(?<=//)[0-9]+|(?<!/)[0-9]+(?=/)|(?<=[/0-9][0-9]/)[0-9]+",line)
+    rawNums=re.split("[/\s]",line)
+    indices = [0,2,3,5,6,8]
+    nums = []
+    for i in indices:
+        nums.append(rawNums[i])
     
     for i in range(len(nums)):
         
@@ -99,25 +105,31 @@ with open(inputFile,"r") as f:
     
 # if an output file is not provided, name it the same as input file
 if args.outputfile:
-    outputFile = args.outputfile
+    try:
+        listdir(args.outputfile)
+        directory = args.outputfile
+        if directory[-1] == "/" or directory[-1] == "\\":
+            directory = directory[:-1]
+        outputFile = directory + "/" + re.findall(r"([^\/]+)(?=[.])",inputFile)[-1]
+    except:
+        outputFile = args.outputfile
 else:
     outputFile = re.findall(r"([^\/]+)(?=[.])",inputFile)[-1]
     
-fileExtension = ".tobj" if outputFile[-5:] != ".tobj" else ""
+fileExtension = ".map" if outputFile[-5:] != ".map" else ""
 
 # TODO: check flag to include vertex normals in output file
-with open(outputFile+fileExtension,"w") as f:
-    lines = []
+with open(outputFile+fileExtension,"wb") as f:
+    
+    f.write( bytes.fromhex( f"{len(facesData):0{2}X}" ) ) # number of faces
+    f.write( bytes.fromhex("00") ) # flags
     
     for face in facesData:
         for vector in face:
             for i in range(3):
                 dec = floatToThreeByteHex(vector[i])
                 hx = f"{dec:0{6}X}"
-            lines.append(f"0x{hx[0:2]}")
-            lines.append(f"0x{hx[2:4]}")
-            lines.append(f"0x{hx[4:6]}")
-                
-    lines.insert(0,f"{len(facesData):#0{4}X}") # number of faces
-    lines.insert(1,"0x00") # flags
-    f.writelines(line + "\n" for line in lines)
+                f.write( bytes.fromhex(hx) )
+
+with open(outputFile+fileExtension,"ab") as f:
+    f.write(bytes(32640-getsize(outputFile+fileExtension)))
