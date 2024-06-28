@@ -58,12 +58,12 @@ function Object3D._renderRoutines.sphere(self,ray,hit)
     return 7.5-math.floor(distanceToLight/2)+1
 end
 
--- TRIANGLE --
+-- MESH --
 
-function Object3D._inits.triangle(pos1,pos2,pos3,rot)
+function Object3D._inits.mesh(triangles,pos,rot)
 
 end
 
-function Object3D._hitChecks.triangle(self)
+function Object3D._hitChecks.mesh(self)
 
 end

@@ -3,12 +3,11 @@
 -- Code changes will be overwritten
 --
 
--- title: game ---
--- author:  game developer, email, etc.
--- desc:    short description
--- site:    website link
--- license: MIT License (change this to your license of choice)
--- version: 0.1
+-- title: 3D
+-- author:  Tom Tkacz, github.com/TomTkacz
+-- desc:    3D rendering
+-- site:    https://www.thomastkacz.com
+-- license: MIT License
 -- script:  lua
 
 -- [TQ-Bundler: class.Pos3D]
@@ -317,7 +316,84 @@ end
 
 -- [/TQ-Bundler: include.Pickle]
 
+-- [TQ-Bundler: class.Object3D]
+
+Object3D={}
+Object3D.mt={}
+Object3D.mti={}
+Object3D._inits={}
+Object3D._hitChecks={}
+Object3D._renderRoutines={}
+
+function Object3D.mt.__call(self,type,...)
+
+    local s={}
+    s=Object3D._inits[type](...)
+    s.type=type
+    s.hasCustomRenderRoutine = Object3D._renderRoutines[type] ~= nil
+    
+    function s:getHitPoint(ray)
+        return Object3D._hitChecks[self.type](self,ray)
+    end
+
+    function s:renderColor(ray,hit)
+        return Object3D._renderRoutines[self.type](self,ray,hit)
+    end
+
+    setmetatable(s,Object3D.mti)
+    return s
+
+end
+setmetatable(Object3D,Object3D.mt)
+
+-- SPHERE --
+
+function Object3D._inits.sphere(pos,radius)
+    return {pos=pos,r=radius}
+end
+
+function Object3D._hitChecks.sphere(self,ray)
+    local r=ray
+    local co=r.pos-self.pos
+	local a=r.dir:dot(r.dir)
+	local b=2*co:dot(r.dir)
+	local c=co:dot(co)-(self.r*self.r)
+	local disc=(b*b)-4*a*c
+	if disc<0 then
+		return
+	end
+	local hit1=(-b+math.sqrt(disc))/(2*a)
+	local hit2=(-b-math.sqrt(disc))/(2*a)
+	local hit=-1
+	if hit2<0 or (hit1>=0 and hit1<hit2) then hit=hit1 end
+	if hit1<0 or (hit2>=0 and hit2<hit1) then hit=hit2 end
+    return hit
+end
+
+function Object3D._renderRoutines.sphere(self,ray,hit)
+    local distanceToLight=distBetween3DPoints(translate3D(camera.pos,ray.dir,hit),light.pos)
+    if distanceToLight>13 then
+        return 1
+    end
+    return 7.5-math.floor(distanceToLight/2)+1
+end
+
+-- MESH --
+
+function Object3D._inits.mesh(triangles,pos,rot)
+
+end
+
+function Object3D._hitChecks.mesh(self)
+
+end
+
+-- [/TQ-Bundler: class.Object3D]
+
 -- GLOBAL VALUES --
+
+MAP_BASE_BYTE_ADDRESS=0x8000
+MAP_SIZE_BYTES=32640
 
 camera={
 	pos=Pos3D(0,0,0),
@@ -335,10 +411,7 @@ viewport={
 	points={}
 }
 
-sphere={
-	pos=Pos3D(0,0,15),
-	r=5
-}
+sphere=Object3D("sphere",Pos3D(0,0,15),5)
 
 light={
 	pos=Pos3D(-5,6,5)
@@ -346,6 +419,12 @@ light={
 
 gmouse={
 	sensitivity=30,
+}
+
+scene={
+	lights={},
+	loadedObjects={},
+	activeObjects={},
 }
 
 -- INITIALIZATION METHODS --
@@ -357,6 +436,75 @@ function initScreenPixels()
 			screen.pixels[y][x]=0
 		end
 	end
+end
+
+function loadObjects()
+	objects={}
+
+	bytesOffset = 0
+
+	-- get current byte address from offset
+	local function curByteAddr()
+		return MAP_BASE_BYTE_ADDRESS+bytesOffset
+	end
+
+	-- get current nibble address from offset
+	local function curNibbleAddr()
+		return (MAP_BASE_BYTE_ADDRESS+bytesOffset)*2
+	end
+
+	local function curBitPairAddr()
+		return (MAP_BASE_BYTE_ADDRESS+bytesOffset)*4
+	end
+
+	local function curBitAddr()
+		return (MAP_BASE_BYTE_ADDRESS+bytesOffset)*8
+	end
+
+	--while bytesOffset < MAP_SIZE_BYTES do
+		numberOfTriangles = peek(curByteAddr())
+		bytesOffset = bytesOffset + 1 -- skip over flags for now
+		flags = peek(curByteAddr())
+		bytesOffset = bytesOffset + 1
+		-- for i=0,numberOfTriangles do
+		-- 	triangle={}
+		-- 	for v=0,3 do
+		-- 		vertex={}
+				if peek(curBitAddr()+8,1) == 0 then sign=1 else sign=-1 end
+				trace("triangles: "..numberOfTriangles)
+				trace("flags: "..flags)
+				trace("sign: "..sign)
+
+				b1 = peek(curByteAddr())
+				if b1 >= 128 then b1 = b1 - 128 end
+				b1 = b1 << 1
+				b1 = b1 | (peek(curByteAddr()+1) >> 7)
+				bytesOffset = bytesOffset + 1
+
+				b2 = peek(curByteAddr())
+				if b2 >= 128 then b2 = b2 - 128 end
+				b2 = b2 << 1
+				b2 = b2 | (peek(curByteAddr()+1) >> 7)
+				bytesOffset = bytesOffset + 1
+
+				b3 = peek(curByteAddr())
+				b3 = b3 >> 3
+				if b3 >= 16 then b3 = b3 - 16 end
+
+				exp = peek(curNibbleAddr(),4)
+				if exp >= 8 then exp = exp - 8 end
+
+				b1 = b1 << 12
+				b2 = b2 << 4
+				
+				base = b1 | b2 | b3
+
+				trace(base)
+				
+				bytesOffset = bytesOffset + 1
+		-- 	end
+		-- end
+	--end
 end
 
 -- CONVERSION METHODS --
@@ -392,7 +540,7 @@ function distBetween3DPoints(p1,p2)
 	return math.sqrt(delta:dot(delta))
 end
 
-function round(n,d) 
+function round(n,d)
 	return math.floor(n*math.pow(10,d))/math.pow(10,d)
 end
 
@@ -401,45 +549,31 @@ function dirBetween3DPoints(p1,p2)
 	local dx = p2.x-p1.x
 	local dy = p2.y-p1.y
 	local dz = p2.z-p1.z
-	local twopi=2*math.pi
 	return Rot3D(round(dx/dist,4),round(dy/dist,4),round(dz/dist,4))
 end
 
 function drawPixels()
 	for y=1,screen.size.h do
 		for x=1,screen.size.w do
-			pix(x+50,y+50,screen.pixels[y][x])
+			pix(x+95,y+40,screen.pixels[y][x])
 		end
 	end
-	rectb(50,50,52,52,12)
+	rectb(95,40,52,52,12)
 end
 
 function renderPixel(x,y)
 	targetpos=screenSpaceToViewportSpace(x,y)
 	r=Ray.fromPoints(camera.pos,targetpos)
-	co=r.pos-sphere.pos
-	a=r.dir:dot(r.dir)
-	b=2*co:dot(r.dir)
-	c=co:dot(co)-(sphere.r*sphere.r)
-	disc=(b*b)-4*a*c
-	if disc<0 then
+
+	hit=sphere:getHitPoint(r)
+
+	if not hit or hit < 0 then
 		screen.pixels[y][x]=0
-		return
-	end
-	hit1=(-b+math.sqrt(disc))/(2*a)
-	hit2=(-b-math.sqrt(disc))/(2*a)
-	hit=-1
-	if hit2<0 or (hit1>=0 and hit1<hit2) then hit=hit1 end
-	if hit1<0 or (hit2>=0 and hit2<hit1) then hit=hit2 end
-	if hit>=0 then
-		local distanceToLight=distBetween3DPoints(translate3D(camera.pos,r.dir,hit),light.pos)
-		if distanceToLight>13 then
-			screen.pixels[y][x]=1
-		else
-			screen.pixels[y][x]=7.5-math.floor(distanceToLight/2)+1
-		end
-	else
-		screen.pixels[y][x]=0
+	elseif sphere.hasCustomRenderRoutine then
+		screen.pixels[y][x]=sphere:renderColor(r,hit)
+	elseif hit>=0 then
+		-- checker pattern for missing render routine
+		screen.pixels[y][x]=12+((y%2)+(x%2))%2
 	end
 end
 
@@ -464,6 +598,7 @@ function TIC()
 	updateMouseInfo()
 	if t==0 then
 		initScreenPixels()
+		loadObjects()
 	end
 	if btn(0) then camera.pos=translate3D(camera.pos,camera.rot,0.5) end
 	if btn(1) then camera.pos=translate3D(camera.pos,camera.rot,-0.5) end
@@ -476,6 +611,10 @@ function TIC()
 		camera.rot:rotate(0,-(2*math.pi)*(physicalSpace/viewport.size.w),0)
 	end
 
+	light.pos.x=10*math.sin(t/100)
+	light.pos.z=10*math.cos(t/100)+15
+	light.pos.y=3*math.sin(t/180)
+
 	updateViewportVectors()
 	for y=1,screen.size.h do
 		for x=1,screen.size.w do
@@ -485,17 +624,16 @@ function TIC()
 	drawPixels()
 	
 	rectb(150,0,41,41,12)
-	pix(170,20,12)
-	--circ(170+math.floor(sphere.pos.x/2+0.5),20-math.floor(sphere.pos.z/2+0.5),sphere.r/2,5)
+	pix(math.floor(light.pos.x/2+0.5)+170,20-math.floor(light.pos.z/2+0.5),12)
+	circ(170+math.floor(sphere.pos.x/2+0.5),20-math.floor(sphere.pos.z/2+0.5),sphere.r/2,5)
 	circ(170+math.floor(camera.pos.x/2+0.5),20-math.floor(camera.pos.z/2+0.5),0.5,8)
-	
-	-- print("("..camera.pos.x..","..camera.pos.y..","..camera.pos.z..")")
-	print("cam.rot:"..pickle(camera.rot),0,0,12)
-	print("viewport.vert:"..pickle(viewport.verticalVector),100,0,12)
-	--print("viewport.horz:"..pickle(viewport.horizontalVector),90,30,12)
-	
+		
 	t=t+1
 end
+-- <MAP>
+-- 000:c00000008008008000008008008008008008008008008000008008008000008000008000008008008000008008008008008000008008008000008008008008008008008008008008008008008000008000008000008000008000008008008000008000008008008000008000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- </MAP>
+
 -- <WAVES>
 -- 000:00000000ffffffff00000000ffffffff
 -- 001:0123456789abcdeffedcba9876543210
