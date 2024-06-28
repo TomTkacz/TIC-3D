@@ -1,4 +1,3 @@
---
 -- Bundle file
 -- Code changes will be overwritten
 --
@@ -341,7 +340,8 @@ function Object3D.mt.__call(self,type,...)
     end
 
     setmetatable(s,Object3D.mti)
-    return s
+    table.insert(scene.activeObjects,s)
+    return #scene.activeObjects
 
 end
 setmetatable(Object3D,Object3D.mt)
@@ -381,7 +381,7 @@ end
 -- MESH --
 
 function Object3D._inits.mesh(triangles,pos,rot)
-
+    return {triangles=triangles,pos=pos,rot=rot}
 end
 
 function Object3D._hitChecks.mesh(self)
@@ -411,8 +411,6 @@ viewport={
 	points={}
 }
 
-sphere=Object3D("sphere",Pos3D(0,0,15),5)
-
 light={
 	pos=Pos3D(-5,6,5)
 }
@@ -425,7 +423,12 @@ scene={
 	lights={},
 	loadedObjects={},
 	activeObjects={},
+	get = function(id)
+		return scene.activeObjects[id]
+	end
 }
+
+sphere=Object3D("sphere",Pos3D(0,0,15),5)
 
 -- INITIALIZATION METHODS --
 
@@ -443,68 +446,104 @@ function loadObjects()
 
 	bytesOffset = 0
 
-	-- get current byte address from offset
+	-- get current byte address from byte offset
 	local function curByteAddr()
 		return MAP_BASE_BYTE_ADDRESS+bytesOffset
 	end
 
-	-- get current nibble address from offset
+	-- get current nibble address from byte offset
 	local function curNibbleAddr()
 		return (MAP_BASE_BYTE_ADDRESS+bytesOffset)*2
 	end
 
-	local function curBitPairAddr()
-		return (MAP_BASE_BYTE_ADDRESS+bytesOffset)*4
-	end
-
+	-- get current bit address from byte offset
 	local function curBitAddr()
 		return (MAP_BASE_BYTE_ADDRESS+bytesOffset)*8
 	end
 
-	--while bytesOffset < MAP_SIZE_BYTES do
+	while bytesOffset < MAP_SIZE_BYTES do
+
+		meshName = ""
+
+		for i=1,12 do
+			if peek(curByteAddr()) ~= 0 then
+				meshName = meshName..codepoint_to_utf8(peek(curByteAddr()))
+			end
+			bytesOffset = bytesOffset + 1
+		end
+
 		numberOfTriangles = peek(curByteAddr())
-		bytesOffset = bytesOffset + 1 -- skip over flags for now
-		flags = peek(curByteAddr())
-		bytesOffset = bytesOffset + 1
-		-- for i=0,numberOfTriangles do
-		-- 	triangle={}
-		-- 	for v=0,3 do
-		-- 		vertex={}
-				if peek(curBitAddr()+8,1) == 0 then sign=1 else sign=-1 end
-				trace("triangles: "..numberOfTriangles)
-				trace("flags: "..flags)
-				trace("sign: "..sign)
+		if numberOfTriangles == 0 then break end
 
-				b1 = peek(curByteAddr())
-				if b1 >= 128 then b1 = b1 - 128 end
-				b1 = b1 << 1
-				b1 = b1 | (peek(curByteAddr()+1) >> 7)
-				bytesOffset = bytesOffset + 1
+		mesh = {meshName}
 
-				b2 = peek(curByteAddr())
-				if b2 >= 128 then b2 = b2 - 128 end
-				b2 = b2 << 1
-				b2 = b2 | (peek(curByteAddr()+1) >> 7)
-				bytesOffset = bytesOffset + 1
+		bytesOffset = bytesOffset + 2 -- skip over flags for now
 
-				b3 = peek(curByteAddr())
-				b3 = b3 >> 3
-				if b3 >= 16 then b3 = b3 - 16 end
+		for a=1,numberOfTriangles do
 
-				exp = peek(curNibbleAddr(),4)
-				if exp >= 8 then exp = exp - 8 end
+			triangle={}
 
-				b1 = b1 << 12
-				b2 = b2 << 4
+			for b=1,3 do
+
+				vertex={}
+
+				for c=1,3 do
+
+					-- reads first bit
+					if peek(curBitAddr()+7,1) == 0 then sign=1 else sign=-1 end
+					
+					-- reads byte, removes leftmost bit, shifts left once, ORs with first bit of next byte
+					b1 = peek(curByteAddr())
+					if b1 >= 128 then b1 = b1 - 128 end
+					b1 = b1 << 1
+					b1 = b1 | (peek(curByteAddr()+1) >> 7)
+					bytesOffset = bytesOffset + 1
+
+					b2 = peek(curByteAddr())
+					if b2 >= 128 then b2 = b2 - 128 end
+					b2 = b2 << 1
+					b2 = b2 | (peek(curByteAddr()+1) >> 7)
+					bytesOffset = bytesOffset + 1
+
+					-- reads byte, shifts right 3, removes bit 4
+					b3 = peek(curByteAddr())
+					b3 = b3 >> 3
+					if b3 >= 16 then b3 = b3 - 16 end
+					
+					-- reads last 4 bits of byte and removes leftmost bit
+					exp = peek(curNibbleAddr(),4)
+					if exp >= 8 then exp = exp - 8 end
+
+					-- ORs together all parts of base num
+					b1 = b1 << 12
+					b2 = b2 << 4
+					base = b1 | b2 | b3
+
+					-- calculates the final float value
+					float = base*math.pow(10,-exp)*sign
+
+					table.insert(vertex,float)
+					
+					bytesOffset = bytesOffset + 1
+				end
+
+				trace("---")
+				printTable(vertex)
+				table.insert(triangle,vertex)
 				
-				base = b1 | b2 | b3
+			end
 
-				trace(base)
-				
-				bytesOffset = bytesOffset + 1
-		-- 	end
-		-- end
-	--end
+			table.insert(mesh,triangle)
+
+		end
+
+		objects[meshName] = mesh
+
+	end
+
+	scene.loadedObjects = objects
+	printTable(scene.loadedObjects)
+
 end
 
 -- CONVERSION METHODS --
@@ -516,7 +555,49 @@ function screenSpaceToViewportSpace(screenX,screenY)
 	return translate3D(position,viewport.verticalVector,-yOffset)
 end
 
+function codepoint_to_utf8(codepoint)
+    local utf8 = ""
+    if codepoint <= 0x7F then
+        utf8 = string.char(codepoint)
+    elseif codepoint <= 0x7FF then
+        utf8 = string.char(
+            0xC0 + math.floor(codepoint / 0x40),
+            0x80 + (codepoint % 0x40)
+        )
+    elseif codepoint <= 0xFFFF then
+        utf8 = string.char(
+            0xE0 + math.floor(codepoint / 0x1000),
+            0x80 + (math.floor(codepoint / 0x40) % 0x40),
+            0x80 + (codepoint % 0x40)
+        )
+    elseif codepoint <= 0x10FFFF then
+        utf8 = string.char(
+            0xF0 + math.floor(codepoint / 0x40000),
+            0x80 + (math.floor(codepoint / 0x1000) % 0x40),
+            0x80 + (math.floor(codepoint / 0x40) % 0x40),
+            0x80 + (codepoint % 0x40)
+        )
+    else
+        error("Code point out of range")
+    end
+    return utf8
+end
+
 -- METHODS --
+
+function printTable(t, indent)
+    indent = indent or ""
+    for key, value in pairs(t) do
+        if type(value) == "table" then
+            trace(indent .. tostring(key) .. ": ")
+            printTable(value, indent .. "  ")
+        elseif type(value) == "function" then
+            trace(indent .. tostring(key) .. ": func")
+        else
+            trace(indent .. tostring(key) .. ": " .. tostring(value))
+        end
+    end
+end
 
 function updateViewportVectors()
 	viewport.center = translate3D(camera.pos,camera.rot,viewport.focalDist)
@@ -565,12 +646,12 @@ function renderPixel(x,y)
 	targetpos=screenSpaceToViewportSpace(x,y)
 	r=Ray.fromPoints(camera.pos,targetpos)
 
-	hit=sphere:getHitPoint(r)
+	hit=scene.get(sphere):getHitPoint(r)
 
 	if not hit or hit < 0 then
 		screen.pixels[y][x]=0
-	elseif sphere.hasCustomRenderRoutine then
-		screen.pixels[y][x]=sphere:renderColor(r,hit)
+	elseif scene.get(sphere).hasCustomRenderRoutine then
+		screen.pixels[y][x]=scene.get(sphere):renderColor(r,hit)
 	elseif hit>=0 then
 		-- checker pattern for missing render routine
 		screen.pixels[y][x]=12+((y%2)+(x%2))%2
@@ -594,17 +675,18 @@ end
 t=0
 
 function TIC()
-
 	updateMouseInfo()
 	if t==0 then
+		cls(0)
+		print("loading...",3,3,12)
 		initScreenPixels()
 		loadObjects()
 	end
+	cls(0)
 	if btn(0) then camera.pos=translate3D(camera.pos,camera.rot,0.5) end
 	if btn(1) then camera.pos=translate3D(camera.pos,camera.rot,-0.5) end
 	if btn(2) then camera.pos=translate3D(camera.pos,viewport.horizontalVector,-0.5) end
 	if btn(3) then camera.pos=translate3D(camera.pos,viewport.horizontalVector,0.5) end
-	cls(0)
 
 	if gmouse.down then
 		physicalSpace = (gmouse.deltaX/screen.size.w)*viewport.size.w*(gmouse.sensitivity/100)
@@ -625,13 +707,14 @@ function TIC()
 	
 	rectb(150,0,41,41,12)
 	pix(math.floor(light.pos.x/2+0.5)+170,20-math.floor(light.pos.z/2+0.5),12)
-	circ(170+math.floor(sphere.pos.x/2+0.5),20-math.floor(sphere.pos.z/2+0.5),sphere.r/2,5)
+	circ(170+math.floor(scene.get(sphere).pos.x/2+0.5),20-math.floor(scene.get(sphere).pos.z/2+0.5),scene.get(sphere).r/2,5)
 	circ(170+math.floor(camera.pos.x/2+0.5),20-math.floor(camera.pos.z/2+0.5),0.5,8)
 		
 	t=t+1
 end
 -- <MAP>
--- 000:c00000008008008000008008008008008008008008008000008008008000008000008000008008008000008008008008008000008008008000008008008008008008008008008008008008008000008000008000008000008000008008008000008000008008008000008000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 000:365726560000000000000000c00008008000008000008008008008008008008008008008008000008008008000008008008000008008008008008008008008008008008000008000008008008000008008008000008000008008008008008000008000008000008008008008008000008000008008008000008000008008008008008008008008008000008008008008008008008008008000008008008000008000008000008000008000008008008008008000008000008008008000008008008008008008008008008008008000008008008000008000008008008000008008008008008000008000008008008000
+-- 001:008000008000008000008008008000008000008000008000008008008000008000008008008008008000008000008008008008008000008008008000008008008008008000008008008000008008008008008000008000008000008000008000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 -- </MAP>
 
 -- <WAVES>

@@ -121,14 +121,17 @@ fileExtension = ".mesh" if outputFile[-5:] != ".mesh" else ""
 # TODO: check flag to include vertex normals in output file
 with open(outputFile+fileExtension,"w") as f:
     lines = []
-    
     for face in facesData:
         for vector in face:
             for i in range(3):
                 dec = floatToThreeByteHex(vector[i])
                 hx = f"{dec:0{6}X}"
-            lines.append(hx)
+                lines.append(hx)
                 
-    lines.insert(0,f"{len(facesData):0{2}X}") # number of faces
-    lines.insert(1,"00") # flags
+    meshName = re.split(r"[\/]",outputFile)[-1]
+    meshName = re.split(r"[.]",meshName)[-2] if len( re.split(r"[.]",meshName) ) > 1 else meshName
+                
+    lines.insert(0,meshName) # name of mesh
+    lines.insert(1,f"{len(facesData):0{2}X}") # number of faces
+    lines.insert(2,"00") # flags
     f.writelines(line + "\n" for line in lines)

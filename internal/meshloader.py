@@ -27,6 +27,15 @@ for i,lines in enumerate(filesData):
             if len(line)*0.5 > freeBytes:
                 insufficientStorage = True
                 break
+            if j==0:
+                if len(line) > 12:
+                    line = line[:-(len(line)-12)]
+                line = line.rstrip()
+                while len(line) < 12:
+                    line += '\0' # fills unused of 12 bits will 0x00
+                f.write(line.encode('utf-8'))
+                freeBytes -= len(line)*0.5
+                continue
             f.write( bytes.fromhex(line) )
             freeBytes -= len(line)*0.5
     if insufficientStorage:

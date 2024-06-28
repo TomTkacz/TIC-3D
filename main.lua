@@ -11,7 +11,6 @@ include "class.Rot3D"
 include "class.Size2D"
 include "class.Ray"
 include "class.Matrix"
-include "include.Pickle"
 include "class.Object3D"
 
 -- GLOBAL VALUES --
@@ -35,8 +34,6 @@ viewport={
 	points={}
 }
 
-sphere=Object3D("sphere",Pos3D(0,0,15),5)
-
 light={
 	pos=Pos3D(-5,6,5)
 }
@@ -49,7 +46,12 @@ scene={
 	lights={},
 	loadedObjects={},
 	activeObjects={},
+	get = function(id)
+		return scene.activeObjects[id]
+	end
 }
+
+sphere=Object3D("sphere",Pos3D(0,0,15),5)
 
 -- INITIALIZATION METHODS --
 
@@ -82,26 +84,33 @@ function loadObjects()
 		return (MAP_BASE_BYTE_ADDRESS+bytesOffset)*8
 	end
 
-	eof = false
 	while bytesOffset < MAP_SIZE_BYTES do
 
+		meshName = ""
+
+		for i=1,12 do
+			if peek(curByteAddr()) ~= 0 then
+				meshName = meshName..codepoint_to_utf8(peek(curByteAddr()))
+			end
+			bytesOffset = bytesOffset + 1
+		end
+
 		numberOfTriangles = peek(curByteAddr())
-		trace("triangles: "..numberOfTriangles)
 		if numberOfTriangles == 0 then break end
 
-		mesh = {}
+		mesh = {meshName}
 
 		bytesOffset = bytesOffset + 2 -- skip over flags for now
 
-		for triangleIndex=0,numberOfTriangles do
+		for a=1,numberOfTriangles do
 
 			triangle={}
 
-			for vertexIndex=0,3 do
+			for b=1,3 do
 
 				vertex={}
 
-				for coordinateIndex=0,3 do
+				for c=1,3 do
 
 					-- reads first bit
 					if peek(curBitAddr()+7,1) == 0 then sign=1 else sign=-1 end
@@ -136,20 +145,20 @@ function loadObjects()
 					-- calculates the final float value
 					float = base*math.pow(10,-exp)*sign
 
-					vertex[coordinateIndex] = float
+					table.insert(vertex,float)
 					
 					bytesOffset = bytesOffset + 1
 				end
 
-				triangle[vertexIndex] = vertex
-
+				table.insert(triangle,vertex)
+				
 			end
 
-			mesh[triangleIndex] = triangle
+			table.insert(mesh,triangle)
 
 		end
 
-		table.insert(objects,mesh)
+		objects[meshName] = mesh
 
 	end
 
@@ -166,7 +175,49 @@ function screenSpaceToViewportSpace(screenX,screenY)
 	return translate3D(position,viewport.verticalVector,-yOffset)
 end
 
+function codepoint_to_utf8(codepoint)
+    local utf8 = ""
+    if codepoint <= 0x7F then
+        utf8 = string.char(codepoint)
+    elseif codepoint <= 0x7FF then
+        utf8 = string.char(
+            0xC0 + math.floor(codepoint / 0x40),
+            0x80 + (codepoint % 0x40)
+        )
+    elseif codepoint <= 0xFFFF then
+        utf8 = string.char(
+            0xE0 + math.floor(codepoint / 0x1000),
+            0x80 + (math.floor(codepoint / 0x40) % 0x40),
+            0x80 + (codepoint % 0x40)
+        )
+    elseif codepoint <= 0x10FFFF then
+        utf8 = string.char(
+            0xF0 + math.floor(codepoint / 0x40000),
+            0x80 + (math.floor(codepoint / 0x1000) % 0x40),
+            0x80 + (math.floor(codepoint / 0x40) % 0x40),
+            0x80 + (codepoint % 0x40)
+        )
+    else
+        error("Code point out of range")
+    end
+    return utf8
+end
+
 -- METHODS --
+
+function printTable(t, indent)
+    indent = indent or ""
+    for key, value in pairs(t) do
+        if type(value) == "table" then
+            trace(indent .. tostring(key) .. ": ")
+            printTable(value, indent .. "  ")
+        elseif type(value) == "function" then
+            trace(indent .. tostring(key) .. ": func")
+        else
+            trace(indent .. tostring(key) .. ": " .. tostring(value))
+        end
+    end
+end
 
 function updateViewportVectors()
 	viewport.center = translate3D(camera.pos,camera.rot,viewport.focalDist)
@@ -215,12 +266,12 @@ function renderPixel(x,y)
 	targetpos=screenSpaceToViewportSpace(x,y)
 	r=Ray.fromPoints(camera.pos,targetpos)
 
-	hit=sphere:getHitPoint(r)
+	hit=scene.get(sphere):getHitPoint(r)
 
 	if not hit or hit < 0 then
 		screen.pixels[y][x]=0
-	elseif sphere.hasCustomRenderRoutine then
-		screen.pixels[y][x]=sphere:renderColor(r,hit)
+	elseif scene.get(sphere).hasCustomRenderRoutine then
+		screen.pixels[y][x]=scene.get(sphere):renderColor(r,hit)
 	elseif hit>=0 then
 		-- checker pattern for missing render routine
 		screen.pixels[y][x]=12+((y%2)+(x%2))%2
@@ -246,15 +297,19 @@ t=0
 function TIC()
 
 	updateMouseInfo()
+
 	if t==0 then
 		initScreenPixels()
 		loadObjects()
+		printTable(scene.loadedObjects)
 	end
+
+	cls(0)
+
 	if btn(0) then camera.pos=translate3D(camera.pos,camera.rot,0.5) end
 	if btn(1) then camera.pos=translate3D(camera.pos,camera.rot,-0.5) end
 	if btn(2) then camera.pos=translate3D(camera.pos,viewport.horizontalVector,-0.5) end
 	if btn(3) then camera.pos=translate3D(camera.pos,viewport.horizontalVector,0.5) end
-	cls(0)
 
 	if gmouse.down then
 		physicalSpace = (gmouse.deltaX/screen.size.w)*viewport.size.w*(gmouse.sensitivity/100)
@@ -275,7 +330,7 @@ function TIC()
 	
 	rectb(150,0,41,41,12)
 	pix(math.floor(light.pos.x/2+0.5)+170,20-math.floor(light.pos.z/2+0.5),12)
-	circ(170+math.floor(sphere.pos.x/2+0.5),20-math.floor(sphere.pos.z/2+0.5),sphere.r/2,5)
+	circ(170+math.floor(scene.get(sphere).pos.x/2+0.5),20-math.floor(scene.get(sphere).pos.z/2+0.5),scene.get(sphere).r/2,5)
 	circ(170+math.floor(camera.pos.x/2+0.5),20-math.floor(camera.pos.z/2+0.5),0.5,8)
 		
 	t=t+1

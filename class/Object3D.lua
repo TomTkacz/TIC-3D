@@ -21,7 +21,8 @@ function Object3D.mt.__call(self,type,...)
     end
 
     setmetatable(s,Object3D.mti)
-    return s
+    table.insert(scene.activeObjects,s)
+    return #scene.activeObjects
 
 end
 setmetatable(Object3D,Object3D.mt)
@@ -61,7 +62,7 @@ end
 -- MESH --
 
 function Object3D._inits.mesh(triangles,pos,rot)
-
+    return {triangles=triangles,pos=pos,rot=rot}
 end
 
 function Object3D._hitChecks.mesh(self)
