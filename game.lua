@@ -1,3 +1,4 @@
+--
 -- Bundle file
 -- Code changes will be overwritten
 --
@@ -250,71 +251,6 @@ setmetatable(Matrix,Matrix.mt)
 
 -- [/TQ-Bundler: class.Matrix]
 
--- [TQ-Bundler: include.Pickle]
-
-----------------------------------------------
--- Pickle.lua
--- A table serialization utility for lua
--- Steve Dekorte, http://www.dekorte.com, Apr 2000
--- Freeware
-----------------------------------------------
-
-function pickle(t)
-    return Pickle:clone():pickle_(t)
-end
-
-Pickle = {
-    clone = function (t) local nt={}; for i, v in pairs(t) do nt[i]=v end return nt end 
-}
-
-function Pickle:pickle_(root)
-    if type(root) ~= "table" then 
-        error("can only pickle tables, not ".. type(root).."s")
-    end
-    self._tableToRef = {}
-    self._refToTable = {}
-    local savecount = 0
-    self:ref_(root)
-    local s = ""
-
-    while #(self._refToTable) > savecount do
-        savecount = savecount + 1
-        local t = self._refToTable[savecount]
-        s = s.."{\n"
-        for i, v in pairs(t) do
-            if type(v) ~= "function" then
-                s = string.format("%s[%s]=%s,\n", s, self:value_(i), self:value_(v))
-            end
-        end
-        s = s.."},\n"
-    end
-
-    return string.format("{%s}", s)
-end
-
-function Pickle:value_(v)
-    local vtype = type(v)
-    if vtype == "string" then return string.format("%q", v)
-    elseif vtype == "number" then return round(v,2)
-    elseif vtype == "boolean" then return tostring(v)
-    elseif vtype == "table" then return "{"..self:ref_(v).."}"
-    else error("pickle a "..type(v).." is not supported")
-    end
-end
-
-function Pickle:ref_(t)
-    local ref = self._tableToRef[t]
-    if not ref then 
-        if t == self then error("can't pickle the pickle class") end
-        table.insert(self._refToTable, t)
-        ref = #(self._refToTable)
-        self._tableToRef[t] = ref
-    end
-    return ref
-end
-
--- [/TQ-Bundler: include.Pickle]
-
 -- [TQ-Bundler: class.Object3D]
 
 Object3D={}
@@ -522,13 +458,16 @@ function loadObjects()
 					-- calculates the final float value
 					float = base*math.pow(10,-exp)*sign
 
+					trace("---")
+					trace(peek(curNibbleAddr(),4))
+					trace(base)
+					trace(exp)
+
 					table.insert(vertex,float)
 					
 					bytesOffset = bytesOffset + 1
 				end
 
-				trace("---")
-				printTable(vertex)
 				table.insert(triangle,vertex)
 				
 			end
@@ -542,7 +481,6 @@ function loadObjects()
 	end
 
 	scene.loadedObjects = objects
-	printTable(scene.loadedObjects)
 
 end
 
@@ -675,14 +613,16 @@ end
 t=0
 
 function TIC()
+
 	updateMouseInfo()
+
 	if t==0 then
-		cls(0)
-		print("loading...",3,3,12)
 		initScreenPixels()
 		loadObjects()
 	end
+
 	cls(0)
+
 	if btn(0) then camera.pos=translate3D(camera.pos,camera.rot,0.5) end
 	if btn(1) then camera.pos=translate3D(camera.pos,camera.rot,-0.5) end
 	if btn(2) then camera.pos=translate3D(camera.pos,viewport.horizontalVector,-0.5) end
@@ -714,7 +654,9 @@ function TIC()
 end
 -- <MAP>
 -- 000:365726560000000000000000c00008008000008000008008008008008008008008008008008000008008008000008008008000008008008008008008008008008008008000008000008008008000008008008000008000008008008008008000008000008000008008008008008000008000008008008000008000008008008008008008008008008000008008008008008008008008008000008008008000008000008000008000008000008008008008008000008000008008008000008008008008008008008008008008008000008008008000008000008008008000008008008008008000008000008008008000
--- 001:008000008000008000008008008000008000008000008000008008008000008000008008008008008000008000008008008008008000008008008000008008008008008000008008008000008008008008008000008000008000008000008000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 001:0080000080000080000080080080000080000080000080000080080080000080000080080080080080000080000080080080080080000080080080000080080080080080000080080080000080080080080080000080000080000080000080000080b6e696665600000000000000310000f9ec5647efa1e3e120086963e66920dc6400f9ecb32e68685cea50316f89f2e950166220086989f2e9a1e3e1203d609c4569a1e3e120086989f2e9296cef200869e037e0c8ec6a20086963e66920dc6408f9ec5647efa1e3e108f9ecb32e68685cea28086963e66920dc6400f9ecb32e68685cea20086963e66920dc642008
+-- 002:69e037e0c8ec6a0029e041bce869fa64200869e037e0c8ec6a20086989f2e9296cef58316f89f2e95016622808691d88eb5016e1283d609c4569a1e3e128086989f2e9296cef58316f89f2e950166228086989f2e9a1e3e108f9ecb32e68685cea0829e041bce869fa64280869e037e0c8ec6a0829e041bce869fa64088ce08934e7f9f3e428086989f2e9296cef0029e041bce869fa640829e041bce869fa6408f9ecb32e68685cea2008691d88eb5016e12808691d88eb5016e158316f89f2e950166200f9ecb32e68685cea08f9ecb32e68685cea08f9ec5647efa1e3e100f9ec5647efa1e3e108f9ec5647efa1e3
+-- 003:e128086989f2e9a1e3e120086989f2e9296cef28086989f2e9296cef088ce08934e7f9f3e4203d609c4569a1e3e1283d609c4569a1e3e12808691d88eb5016e1008ce08934e7f9f3e4088ce08934e7f9f3e40829e041bce869fa6420086989f2e9a1e3e128086989f2e9a1e3e1283d609c4569a1e3e150316f89f2e950166258316f89f2e950166228086989f2e9296cef0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 -- </MAP>
 
 -- <WAVES>
