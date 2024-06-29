@@ -61,10 +61,10 @@ end
 
 -- MESH --
 
-function Object3D._inits.mesh(triangles,pos,rot)
-    return {triangles=triangles,pos=pos,rot=rot}
+function Object3D._inits.mesh(meshID)
+    return {meshID=meshID}
 end
 
 function Object3D._hitChecks.mesh(self)
-
+    return 10 -- test value
 end

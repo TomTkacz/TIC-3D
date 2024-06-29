@@ -175,6 +175,21 @@ function screenSpaceToViewportSpace(screenX,screenY)
 	return translate3D(position,viewport.verticalVector,-yOffset)
 end
 
+function worldSpaceToViewportSpace(pos)
+	local x,y,z = pos.x,pos.y,pos.z
+	local xPrime = (x*viewport.focalDist)/z
+	local yPrime = (y*viewport.focalDist)/z
+	local zPrime = viewport.focalDist
+	return Pos3D(xPrime,yPrime,zPrime)
+end
+
+function viewportSpaceToScreenSpace(pos)
+	local x,y = pos.x,pos.y
+	local screenX = (x*screen.size.w)/viewport.size.w
+	local screenY = (y*screen.size.h)/viewport.size.h
+	return Pos2D(screenX,screenY)
+end
+
 function codepoint_to_utf8(codepoint)
     local utf8 = ""
     if codepoint <= 0x7F then
@@ -268,14 +283,17 @@ function renderPixel(x,y)
 
 	hit=scene.get(sphere):getHitPoint(r)
 
+	color = -1
+
 	if not hit or hit < 0 then
-		screen.pixels[y][x]=0
+		color=0
 	elseif scene.get(sphere).hasCustomRenderRoutine then
-		screen.pixels[y][x]=scene.get(sphere):renderColor(r,hit)
-	elseif hit>=0 then
+		color=scene.get(sphere):renderColor(r,hit)
+	elseif hit>=0 or color==-1 then
 		-- checker pattern for missing render routine
-		screen.pixels[y][x]=12+((y%2)+(x%2))%2
+		color=12+((y%2)+(x%2))%2
 	end
+	screen.pixels[y][x] = color
 end
 
 function updateMouseInfo()
@@ -301,7 +319,7 @@ function TIC()
 	if t==0 then
 		initScreenPixels()
 		loadObjects()
-		printTable(scene.loadedObjects)
+		printTable(scene.activeObjects)
 	end
 
 	cls(0)
