@@ -6,9 +6,9 @@ function Rot3D.mt.__call(self,x,y,z)
 	local s={x=x,y=y,z=z}
 
 	function s:rotate(x,y,z)
-		local m=Matrix.fromVector(self)
-		m:applyRotation(x,y,z)
-		self.x,self.y,self.z = table.unpack(m[1])
+		self.x=self.x+x
+		self.y=self.y+y
+		self.z=self.z+z
 	end
 
 	function s:rotateAboutAxis(dir,angle)

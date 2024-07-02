@@ -48,16 +48,23 @@ function Object3D._renderRoutines.mesh(self)
             self.origin = self.pos
             local vertexPos = Pos3D(table.unpack(vertex))
 
+            -- scale mesh
             local vModelScaled = vertexPos*self.scale
+
+            -- translate/rotate mesh about its origin
             local vModelRotated = vModelScaled
             vModelRotated:rotateAboutAxis(Dir3D(1,0,0),self.rot.x)
             vModelRotated:rotateAboutAxis(Dir3D(0,1,0),self.rot.y)
             vModelRotated:rotateAboutAxis(Dir3D(0,0,1),self.rot.z)
             local vWorld = vModelRotated+self.origin
+
+            -- translate/rotate mesh about the camera
             local vTranslated = vWorld-camera.pos
-            -- local vCamera = vTranslated:rotateAboutAxis(-camera.dir,math.pi)
-            -- man wtf
-            screenPos=worldSpaceToScreenSpace(vWorld)
+            vTranslated:rotateAboutAxis(Dir3D(1,0,0),-camera.rot.x)
+            vTranslated:rotateAboutAxis(Dir3D(0,1,0),-camera.rot.y)
+            vTranslated:rotateAboutAxis(Dir3D(0,0,1),-camera.rot.z)
+
+            screenPos=worldSpaceToScreenSpace(vTranslated)
             table.insert(data,screenPos.x)
             table.insert(data,screenPos.y)
         end

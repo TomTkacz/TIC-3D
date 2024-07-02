@@ -32,6 +32,7 @@ camera={
 }
 function camera:rotate(x,y,z)
 	self.rot=self.rot+Rot3D(x,y,z)
+	self.dir = Dir3D(0,0,1)
 	self.dir:rotate(self.rot.x,self.rot.y,self.rot.z)
 end
 camera.dir:rotate(camera.rot.x,camera.rot.y,camera.rot.z)
@@ -135,7 +136,7 @@ function dirBetween3DPoints(p1,p2)
 	local dx = p2.x-p1.x
 	local dy = p2.y-p1.y
 	local dz = p2.z-p1.z
-	return Rot3D(round(dx/dist,4),round(dy/dist,4),round(dz/dist,4))
+	return Dir3D(round(dx/dist,4),round(dy/dist,4),round(dz/dist,4))
 end
 
 -- function renderPixel(x,y)
@@ -183,29 +184,24 @@ function TIC()
 
 	if t==0 then
 		loadObjects()
-		cube=Object3D("mesh","cube",Pos3D(-3,-3,5),Rot3D(0,0,0),Dir3D(0,0,1),1)
+		cube=Object3D("mesh","cube",Pos3D(-3,0,3),Rot3D(0,0,0),Dir3D(0,0,1),1)
 	end
 
 	cls(0)
 
-	-- if btn(0) then scene.get(cube).pos=scene.get(cube).pos-Pos3D(0,0,0.1) end
-	-- if btn(1) then scene.get(cube).pos=scene.get(cube).pos+Pos3D(0,0,0.1) end
-	-- if btn(2) then scene.get(cube).pos=scene.get(cube).pos+Pos3D(0.1,0,0) end
-	-- if btn(3) then scene.get(cube).pos=scene.get(cube).pos-Pos3D(0.1,0,0) end
-
-	if btn(0) then camera.pos=camera.pos-Pos3D(0,0,0.1) end --down
-	if btn(1) then camera.pos=camera.pos+Pos3D(0,0,0.1) end --up
+	if btn(0) then camera.pos=translate3D(camera.pos,camera.dir,0.1) end --forward
+	if btn(1) then camera.pos=translate3D(camera.pos,camera.dir,-0.1) end --backward
 	if btn(2) then camera:rotate(0,math.pi/32,0) end--right
 	if btn(3) then camera:rotate(0,-math.pi/32,0) end --left
 
 	if gmouse.down then
 		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)
-		camera.rot:rotate(0,-(2*math.pi)*(physicalSpace/viewport.size.w),0)
+		camera:rotate(0,-(2*math.pi)*(physicalSpace/viewport.size.w),0)
 	end
 
-	light.pos.x=10*math.sin(t/100)
-	light.pos.z=10*math.cos(t/100)+15
-	light.pos.y=3*math.sin(t/180)
+	-- light.pos.x=10*math.sin(t/100)
+	-- light.pos.z=10*math.cos(t/100)+15
+	-- light.pos.y=3*math.sin(t/180)
 
 	updateViewportVectors()
 	renderScreen()
