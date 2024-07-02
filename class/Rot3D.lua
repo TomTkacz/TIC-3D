@@ -5,19 +5,15 @@ Rot3D.mti={}
 function Rot3D.mt.__call(self,x,y,z)
 	local s={x=x,y=y,z=z}
 
-	function s:dot(p2)
-		return (self.x*p2.x)+(self.y*p2.y)+(self.z*p2.z)
-	end
-
 	function s:rotate(x,y,z)
 		local m=Matrix.fromVector(self)
 		m:applyRotation(x,y,z)
 		self.x,self.y,self.z = table.unpack(m[1])
 	end
 
-	function s:rotateAboutVector(v,angle)
+	function s:rotateAboutAxis(dir,angle)
 		local m=Matrix.fromVector(self)
-		m:applyAxisAngleRotation(v,angle)
+		m:applyAxisAngleRotation(dir,angle)
 		self.x,self.y,self.z = table.unpack(m[1])
 	end
 
@@ -25,12 +21,26 @@ function Rot3D.mt.__call(self,x,y,z)
 	return s
 end
 
+function Rot3D.mti.__add(self,v)
+	if not type(v) == "table" then return end
+	return Rot3D(inRads(self.x+v.x),inRads(self.y+v.y),inRads(self.z+v.z))
+end
+
+function Rot3D.mti.__sub(self,v)
+	if not type(v) == "table" then return end
+	return Rot3D(inRads(self.x-v.x),inRads(self.y-v.y),inRads(self.z-v.z))
+end
+
 function Rot3D.mti.__mul(self,v)
 	if type(v) == "table" then
-		return Rot3D(self.x*v.x,self.y*v.y,self.z*v.z)
+		return Rot3D(inRads(self.x*v.x),inRads(self.y*v.y),inRads(self.z*v.z))
 	elseif type(v) == "number" then
-		return Rot3D(self.x*v,self.y*v,self.z*v)
+		return Rot3D(inRads(self.x*v),inRads(self.y*v),inRads(self.z*v))
 	else return end
+end
+
+function Rot3D.mti.__unm(self)
+	return Rot3D(-self.x,-self.y,-self.z)
 end
 
 function Rot3D.fromMatrix(m)

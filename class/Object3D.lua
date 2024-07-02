@@ -5,6 +5,7 @@ Object3D._inits={}
 Object3D._hitChecks={}
 Object3D._renderRoutines={}
 
+---@param type string
 function Object3D.mt.__call(self,type,...)
 
     local s={}
@@ -25,20 +26,38 @@ setmetatable(Object3D,Object3D.mt)
 
 -- MESH --
 
-function Object3D._inits.mesh(meshID,pos)
+function Object3D._inits.mesh(meshID,pos,rot,dir,scale)
     local mesh = scene.loadedObjects[meshID]
-    return {meshID=meshID,pos=pos,origin=mesh.origin,numberOfTriangles=mesh.numberOfTriangles}
+    return {
+        meshID=mesh.meshID,
+        pos=pos,
+        rot=rot,
+        dir=dir,
+        scale=scale,
+        origin=mesh.origin,
+        numberOfTriangles=mesh.numberOfTriangles
+    }
 end
 
 function Object3D._renderRoutines.mesh(self)
-    mesh = scene.loadedObjects[self.meshID]
-    mesh.origin=self.pos
-
+    local mesh = scene.loadedObjects[self.meshID]
+    self.origin = self.pos
     for _,triangle in pairs(mesh.triangles) do
         data={}
         for _,vertex in pairs(triangle) do
-            vertexPos = Pos3D(table.unpack(vertex))
-            screenPos=worldSpaceToScreenSpace(vertexPos+self.origin)
+            self.origin = self.pos
+            local vertexPos = Pos3D(table.unpack(vertex))
+
+            local vModelScaled = vertexPos*self.scale
+            local vModelRotated = vModelScaled
+            vModelRotated:rotateAboutAxis(Dir3D(1,0,0),self.rot.x)
+            vModelRotated:rotateAboutAxis(Dir3D(0,1,0),self.rot.y)
+            vModelRotated:rotateAboutAxis(Dir3D(0,0,1),self.rot.z)
+            local vWorld = vModelRotated+self.origin
+            local vTranslated = vWorld-camera.pos
+            -- local vCamera = vTranslated:rotateAboutAxis(-camera.dir,math.pi)
+            -- man wtf
+            screenPos=worldSpaceToScreenSpace(vWorld)
             table.insert(data,screenPos.x)
             table.insert(data,screenPos.y)
         end
