@@ -7,12 +7,17 @@ function Matrix.mt.__call(self,rows,cols,fill)
 	s={rows=rows,cols=cols,values={}}
 
 	function s:applyRotation(x,y,z)
+		local sin = math.sin
+		local cos = math.cos
 		local rx=Matrix(3,3)
-		rx.values={{1,0,0},{0,math.cos(x),-math.sin(x)},{0,math.sin(x),math.cos(x)}}
+		local sinx,cosx = sin(x),cos(x)
+		rx.values={{1,0,0},{0,cosx,-sinx},{0,sinx,cosx}}
 		local ry=Matrix(3,3)
-		ry.values={{math.cos(y),0,math.sin(y)},{0,1,0},{-math.sin(y),0,math.cos(y)}}
+		local siny,cosy = sin(y),cos(y)
+		ry.values={{cosy,0,siny},{0,1,0},{-siny,0,cosy}}
 		local rz=Matrix(3,3)
-		rz.values={{math.cos(z),-math.sin(z),0},{math.sin(z),math.cos(z),0},{0,0,1}}
+		local sinz,cosz = sin(z),cos(z)
+		rz.values={{cosz,-sinz,0},{sinz,cosz,0},{0,0,1}}
 		self.values = (self*(rx*ry*rz)).values
 	end
 
@@ -77,20 +82,12 @@ function Matrix.mti.__sub(self,m)
 end
 
 function Matrix.mti.__mul(self,m)
-	if type(m)=="number" then
-		n=Matrix(self.rows,self.cols)
-		for row=1,self.rows do
-			for col=1,self.cols do
-				n[row][col] = self[row][col]*m
-			end
-		end
-		return n
-	elseif type(m)=="table" then
+	if type(m)=="table" then
 		if self.cols ~= m.rows then return end
-		n=Matrix(self.rows,m.cols)
+		local n=Matrix(self.rows,m.cols)
 		for nrow=1,self.rows do
 			for ncol=1,m.cols do
-				total=0
+				local total=0
 				for col=1,self.cols do
 					total=total+(self[nrow][col]*m[col][ncol])
 				end
@@ -98,7 +95,14 @@ function Matrix.mti.__mul(self,m)
 			end
 		end
 		return n
-	else return end
+	end
+	local n=Matrix(self.rows,self.cols)
+	for row=1,self.rows do
+		for col=1,self.cols do
+			n[row][col] = self[row][col]*m
+		end
+	end
+	return n
 end
 
 setmetatable(Matrix,Matrix.mt)

@@ -42,9 +42,10 @@ end
 function Object3D._renderRoutines.mesh(self)
     local mesh = scene.loadedObjects[self.meshID]
     self.origin = self.pos
-    for _,triangle in pairs(mesh.triangles) do
+
+    for i,triangle in pairs(mesh.triangles) do
         data={}
-        for _,vertex in pairs(triangle) do
+        for _,vertex in ipairs(triangle) do
             self.origin = self.pos
             local vertexPos = Pos3D(table.unpack(vertex))
 
@@ -56,19 +57,20 @@ function Object3D._renderRoutines.mesh(self)
             vModelRotated:rotateAboutAxis(Dir3D(1,0,0),self.rot.x)
             vModelRotated:rotateAboutAxis(Dir3D(0,1,0),self.rot.y)
             vModelRotated:rotateAboutAxis(Dir3D(0,0,1),self.rot.z)
-            local vWorld = vModelRotated+self.origin
+            vWorld = vModelRotated+self.origin
 
             -- translate/rotate mesh about the camera
             local vTranslated = vWorld-camera.pos
             vTranslated:rotateAboutAxis(Dir3D(1,0,0),-camera.rot.x)
-            vTranslated:rotateAboutAxis(Dir3D(0,1,0),-camera.rot.y)
+            vTranslated:rotateAboutAxis(Dir3D(0,1,0),math.pi-camera.rot.y)
             vTranslated:rotateAboutAxis(Dir3D(0,0,1),-camera.rot.z)
 
-            screenPos=worldSpaceToScreenSpace(vTranslated)
+            local screenPos=worldSpaceToScreenSpace(vTranslated)
+
             table.insert(data,screenPos.x)
             table.insert(data,screenPos.y)
         end
-        table.insert(data,12)
-        trib(table.unpack(data))
+        table.insert(data,(i%11)+1)
+        tri(table.unpack(data))
     end
 end

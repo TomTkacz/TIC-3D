@@ -171,7 +171,9 @@ function updateMouseInfo()
 end
 
 function renderScreen()
-	scene.get(cube):render()
+	for _,obj in pairs(scene.activeObjects) do
+		obj:render()
+	end
 end
 
 -- MAIN LOOP --
@@ -184,7 +186,10 @@ function TIC()
 
 	if t==0 then
 		loadObjects()
-		cube=Object3D("mesh","cube",Pos3D(-3,0,3),Rot3D(0,0,0),Dir3D(0,0,1),1)
+		cube=Object3D("mesh","knife",Pos3D(0,0,5),Rot3D(0,0,0),Dir3D(0,0,1),0.5)
+		-- Object3D("mesh","cube",Pos3D(1,3,8),Rot3D(0.03,math.pi/8,0.9),Dir3D(0,0,1),1)
+		--Object3D("mesh","knife",Pos3D(0,0,10),Rot3D(0,math.pi/8,0),Dir3D(0,0,1),6)
+		printTable(scene.loadedObjects.knife)
 	end
 
 	cls(0)
@@ -198,6 +203,8 @@ function TIC()
 		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)
 		camera:rotate(0,-(2*math.pi)*(physicalSpace/viewport.size.w),0)
 	end
+
+	scene.get(cube).rot:rotate(0,math.pi/64,0)
 
 	-- light.pos.x=10*math.sin(t/100)
 	-- light.pos.z=10*math.cos(t/100)+15
