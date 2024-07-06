@@ -71,13 +71,17 @@ def floatToThreeByteHex(n):
     # extracting sign
     sign = 0 if n >= 0 else 1
         
-    wholeNum = abs(int(n)) # 0
-    wholeNumLength = len(str(wholeNum)) if wholeNum > 0 else 0 # 0
-    decimalNumString = str(round(abs(n)-wholeNum,7-wholeNumLength)).split(".")[1]
-    decimalNumLength = len( decimalNumString ) if int(decimalNumString) > 0 else 0
-    decimalNum = int(decimalNumString)
+    wholeNum = abs(int(n))
+    wholeNumLength = len(str(wholeNum))
+    decimalNum = round( abs(n)-wholeNum, 6-wholeNumLength )
+    decimalNumLength = len(str(decimalNum)) - 2
     
-    base = wholeNum*(10**decimalNumLength)+decimalNum
+    if wholeNum == 0:
+        wholeNumLength-=1
+    if decimalNum == 0:
+        decimalNumLength-=1
+    
+    base = int(wholeNum*10**decimalNumLength) + int(decimalNum*10**decimalNumLength)
     exponent = decimalNumLength
     
     # combine sign, base, and exponent into a single integer
