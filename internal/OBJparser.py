@@ -25,28 +25,39 @@ def parseFaceLines(line):
     
     f=[]
     
-    # given 1/2/3, should only capture 1 and 3
-    # given 1//2,  should capture both 1 and 2
-    # given 1/2,   should only capture 1
-    rawNums=re.split("[/\s]",line)
-    indices = [0,2,3,5,6,8]
-    nums = []
-    for i in indices:
-        nums.append(rawNums[i])
+    rawNums=re.split("//|[/\s]",line)
+    numOfVertices=len( re.findall("\s",line) ) + 1
+    numsPerVertex=len(rawNums)/numOfVertices
+    hasNormals = len( re.findall("//",line) ) > 0 or numsPerVertex==3
     
-    for i in range(len(nums)):
+    vertices = []
+    normals = []
+    
+    for i,n in enumerate(rawNums):
+        if numsPerVertex > 1:
+            if hasNormals and i%numsPerVertex==1:
+                normals.append(int(n))
+            elif i%numsPerVertex==0:
+                vertices.append(int(n))
+        else:
+            vertices.append(int(n))
         
-        # if face is in format v/#/vn or v//vn i.e. len(nums)==6 then navigate nums in pairs
-        if not i%2==0 and len(nums)==6:
-            continue
-        vertexIndex=int(nums[i])-1
-        vertexNormalIndex=int(nums[i+1])-1
+    for i in range(len(vertices)):
+
+        vertexIndex=vertices[i]-1
+        vertexNormalIndex=normals[i]-1
         
-        # if face is in format v/# i.e. len(nums)==3 then there is no vertex normal data to append to vertex
-        if len(verticesData[vertexIndex])<=3 and not len(nums)==3:
+        if hasNormals:
             verticesData[vertexIndex].append(vertexNormalsData[vertexNormalIndex])
-            
-        f.append(verticesData[vertexIndex])
+        
+        if numOfVertices==3:
+            f.append(verticesData[vertexIndex])
+        elif numOfVertices%3==0:
+            f.append(verticesData[vertexIndex])
+            if (i+1)%numsPerVertex==0:
+                facesData.append(f)
+                f=[]
+                
         
     facesData.append(f)
     

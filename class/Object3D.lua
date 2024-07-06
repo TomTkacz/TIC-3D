@@ -5,19 +5,16 @@ Object3D._inits={}
 Object3D._hitChecks={}
 Object3D._renderRoutines={}
 
+---@param type string
 function Object3D.mt.__call(self,type,...)
 
     local s={}
     s=Object3D._inits[type](...)
     s.type=type
     s.hasCustomRenderRoutine = Object3D._renderRoutines[type] ~= nil
-    
-    function s:getHitPoint(ray)
-        return Object3D._hitChecks[self.type](self,ray)
-    end
 
-    function s:renderColor(ray,hit)
-        return Object3D._renderRoutines[self.type](self,ray,hit)
+    function s:render()
+        return Object3D._renderRoutines[self.type](self)
     end
 
     setmetatable(s,Object3D.mti)
@@ -27,44 +24,53 @@ function Object3D.mt.__call(self,type,...)
 end
 setmetatable(Object3D,Object3D.mt)
 
--- SPHERE --
-
-function Object3D._inits.sphere(pos,radius)
-    return {pos=pos,r=radius}
-end
-
-function Object3D._hitChecks.sphere(self,ray)
-    local r=ray
-    local co=r.pos-self.pos
-	local a=r.dir:dot(r.dir)
-	local b=2*co:dot(r.dir)
-	local c=co:dot(co)-(self.r*self.r)
-	local disc=(b*b)-4*a*c
-	if disc<0 then
-		return
-	end
-	local hit1=(-b+math.sqrt(disc))/(2*a)
-	local hit2=(-b-math.sqrt(disc))/(2*a)
-	local hit=-1
-	if hit2<0 or (hit1>=0 and hit1<hit2) then hit=hit1 end
-	if hit1<0 or (hit2>=0 and hit2<hit1) then hit=hit2 end
-    return hit
-end
-
-function Object3D._renderRoutines.sphere(self,ray,hit)
-    local distanceToLight=distBetween3DPoints(translate3D(camera.pos,ray.dir,hit),light.pos)
-    if distanceToLight>13 then
-        return 1
-    end
-    return 7.5-math.floor(distanceToLight/2)+1
-end
-
 -- MESH --
 
-function Object3D._inits.mesh(meshID)
-    return {meshID=meshID}
+function Object3D._inits.mesh(meshID,pos,rot,dir,scale)
+    local mesh = scene.loadedObjects[meshID]
+    return {
+        meshID=mesh.meshID,
+        pos=pos,
+        rot=rot,
+        dir=dir,
+        scale=scale,
+        origin=mesh.origin,
+        numberOfTriangles=mesh.numberOfTriangles
+    }
 end
 
-function Object3D._hitChecks.mesh(self)
-    return 10 -- test value
+function Object3D._renderRoutines.mesh(self)
+    local mesh = scene.loadedObjects[self.meshID]
+    self.origin = self.pos
+
+    for i,triangle in pairs(mesh.triangles) do
+        data={}
+        for _,vertex in ipairs(triangle) do
+            self.origin = self.pos
+            local vertexPos = Pos3D(table.unpack(vertex))
+
+            -- scale mesh
+            local vModelScaled = vertexPos*self.scale
+
+            -- translate/rotate mesh about its origin
+            local vModelRotated = vModelScaled
+            vModelRotated:rotateAboutAxis(Dir3D(1,0,0),self.rot.x)
+            vModelRotated:rotateAboutAxis(Dir3D(0,1,0),self.rot.y)
+            vModelRotated:rotateAboutAxis(Dir3D(0,0,1),self.rot.z)
+            vWorld = vModelRotated+self.origin
+
+            -- translate/rotate mesh about the camera
+            local vTranslated = vWorld-camera.pos
+            vTranslated:rotateAboutAxis(Dir3D(1,0,0),-camera.rot.x)
+            vTranslated:rotateAboutAxis(Dir3D(0,1,0),math.pi-camera.rot.y)
+            vTranslated:rotateAboutAxis(Dir3D(0,0,1),-camera.rot.z)
+
+            local screenPos=worldSpaceToScreenSpace(vTranslated)
+
+            table.insert(data,screenPos.x)
+            table.insert(data,screenPos.y)
+        end
+        table.insert(data,(i%11)+1)
+        tri(table.unpack(data))
+    end
 end
