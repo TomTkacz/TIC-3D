@@ -9,15 +9,30 @@ function Matrix.mt.__call(self,rows,cols,fill)
 	function s:applyRotation(x,y,z)
 		local sin = math.sin
 		local cos = math.cos
-		local rx=Matrix(3,3)
 		local sinx,cosx = sin(x),cos(x)
-		rx.values={{1,0,0},{0,cosx,-sinx},{0,sinx,cosx}}
-		local ry=Matrix(3,3)
 		local siny,cosy = sin(y),cos(y)
-		ry.values={{cosy,0,siny},{0,1,0},{-siny,0,cosy}}
-		local rz=Matrix(3,3)
 		local sinz,cosz = sin(z),cos(z)
-		rz.values={{cosz,-sinz,0},{sinz,cosz,0},{0,0,1}}
+		local rx,ry,rz=Matrix(4,4),Matrix(4,4),Matrix(4,4)
+
+		rx.values={
+			{ 1, 0, 0, 0},
+			{ 0, cosx, -sinx, 0 },
+			{ 0, sinx, cosx, 0 },
+			{ 0, 0, 0, 1}
+		}
+		ry.values={
+			{ cosy, 0, siny, 0},
+			{ 0, 1, 0, 0 },
+			{ -siny, 0, cosy, 0 },
+			{ 0, 0, 0, 1}
+		}
+		rz.values={
+			{ cosz, -sinz, 0, 0},
+			{ sinz, cosz, 0, 0},
+			{ 0, 0, 1, 0},
+			{ 0, 0, 0, 1}
+		}
+
 		self.values = (self*(rx*ry*rz)).values
 	end
 
@@ -28,13 +43,36 @@ function Matrix.mt.__call(self,rows,cols,fill)
 		local x=dir.x
 		local y=dir.y
 		local z=dir.z
-		local Q=Matrix(3,3)
+		local Q=Matrix(4,4)
 		Q.values={
-			{ x*x*C+c, x*y*C-z*s, x*z*C+y*s },
-			{ y*x*C+z*s, y*y*C+c, y*z*C-x*s },
-			{ z*x*C-y*s, z*y*C+x*s, z*z*C+c },
+			{ x*x*C+c,   x*y*C-z*s, x*z*C+y*s, 0 },
+			{ y*x*C+z*s, y*y*C+c,   y*z*C-x*s, 0 },
+			{ z*x*C-y*s, z*y*C+x*s, z*z*C+c,   0 },
+			{ 0,         0,         0,         1 }
 		}
-		self.values = (self*Q).values
+		self.values = (Q*self).values
+	end
+
+	function s:applyScaleFactor(sx,sy,sz)
+		local Q=Matrix(4,4)
+		Q.values = {
+			{ sx, 0, 0, 0 },
+			{ 0, sy, 0, 0 },
+			{ 0, 0, sz, 0 },
+			{ 0, 0, 0, 1 }
+		}
+		self.values = (Q*self).values
+	end
+
+	function s:applyTranslation(tx,ty,tz)
+		local Q=Matrix(4,4)
+		Q.values = {
+			{ 1, 0, 0, tx },
+			{ 0, 1, 0, ty },
+			{ 0, 0, 1, tz },
+			{ 0, 0, 0, 1 }
+		}
+		self.values = (Q*self).values
 	end
 
 	for row=1,rows do
@@ -47,9 +85,14 @@ function Matrix.mt.__call(self,rows,cols,fill)
 	return s
 end
 
-function Matrix.fromVector(v)
-	local m=Matrix(1,3)
-	m.values={{v.x,v.y,v.z}}
+function Matrix.fromVector(v,d)
+	if d then
+		m=Matrix(4,1)
+		m.values={{v.x},{v.y},{v.z},{v.w}}
+	else
+		m=Matrix(1,4)
+		m.values={{v.x,v.y,v.z,v.w}}
+	end
 	return m
 end
 
