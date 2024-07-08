@@ -109,15 +109,15 @@ function getMeshRelativeToOrigin(mesh,origin)
 	return newmesh
 end
 
-function updateViewportVectors()
-	viewport.center = translate3D(camera.pos,camera.rot,viewport.focalDist)
-	viewport.horizontalVector = Rot3D(camera.rot.x,camera.rot.y,camera.rot.z)
-	viewport.verticalVector = Rot3D(camera.rot.x,camera.rot.y,camera.rot.z)
-	viewport.horizontalVector:rotate(0,-math.pi/2,0)
-	viewport.verticalVector:rotateAboutAxis(viewport.horizontalVector,math.pi/2)
-	viewport.base = translate3D(viewport.center,viewport.horizontalVector,-viewport.size.w/2)
-	viewport.base = translate3D(viewport.base,viewport.verticalVector,viewport.size.h/2)
-end
+-- function updateViewportVectors()
+-- 	viewport.center = translate3D(camera.pos,camera.rot,viewport.focalDist)
+-- 	viewport.horizontalVector = Rot3D(camera.rot.x,camera.rot.y,camera.rot.z)
+-- 	viewport.verticalVector = Rot3D(camera.rot.x,camera.rot.y,camera.rot.z)
+-- 	viewport.horizontalVector:rotate(0,-math.pi/2,0)
+-- 	viewport.verticalVector:rotateAboutAxis(viewport.horizontalVector,math.pi/2)
+-- 	viewport.base = translate3D(viewport.center,viewport.horizontalVector,-viewport.size.w/2)
+-- 	viewport.base = translate3D(viewport.base,viewport.verticalVector,viewport.size.h/2)
+-- end
 
 function translate3D(pos,dir,dist)
 	local newX = pos.x+(dir.x*dist)
@@ -138,25 +138,6 @@ function dirBetween3DPoints(p1,p2)
 	local dz = p2.z-p1.z
 	return Dir3D(round(dx/dist,4),round(dy/dist,4),round(dz/dist,4))
 end
-
--- function renderPixel(x,y)
--- 	targetpos=screenSpaceToViewportSpace(x,y)
--- 	r=Ray.fromPoints(camera.pos,targetpos)
-
--- 	hit=scene.get(sphere):getHitPoint(r)
-
--- 	color = -1
-
--- 	if not hit or hit < 0 then
--- 		color=0
--- 	elseif scene.get(sphere).hasCustomRenderRoutine then
--- 		color=scene.get(sphere):renderColor(r,hit)
--- 	elseif hit>=0 or color==-1 then
--- 		-- checker pattern for missing render routine
--- 		color=12+((y%2)+(x%2))%2
--- 	end
--- 	screen.pixels[y][x] = color
--- end
 
 function updateMouseInfo()
 	if gmouse.x==nil then gmouse.x=0 end
@@ -186,10 +167,7 @@ function TIC()
 
 	if t==0 then
 		loadObjects()
-		cube=Object3D("mesh","knife",Pos3D(0,0,5),Rot3D(0,0,0),Dir3D(0,0,1),0.5)
-		-- Object3D("mesh","cube",Pos3D(1,3,8),Rot3D(0.03,math.pi/8,0.9),Dir3D(0,0,1),1)
-		--Object3D("mesh","knife",Pos3D(0,0,10),Rot3D(0,math.pi/8,0),Dir3D(0,0,1),6)
-		printTable(scene.loadedObjects.knife)
+		cube=Object3D("mesh","cube",Pos3D(0,0,5),Rot3D(0,0,0),Dir3D(0,0,1),0.5)
 	end
 
 	cls(0)
@@ -210,7 +188,6 @@ function TIC()
 	-- light.pos.z=10*math.cos(t/100)+15
 	-- light.pos.y=3*math.sin(t/180)
 
-	updateViewportVectors()
 	renderScreen()
 		
 	t=t+1

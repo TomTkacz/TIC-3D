@@ -188,17 +188,34 @@ Pos3D={}
 Pos3D.mt={}
 Pos3D.mti={}
 
-function Pos3D.mt.__call(self,x,y,z)
-	local s={x=x,y=y,z=z}
+function Pos3D.mt.__call(self,x,y,z,w)
+	local s={x=x,y=y,z=z,w=1}
+	if w~=nil then s.w=w end
 
 	function s:dot(p2)
-		return (self.x*p2.x)+(self.y*p2.y)+(self.z*p2.z)
+		return (self.x*p2.x)+(self.y*p2.y)+(self.z*p2.z)+(self.w*p2.w)
+	end
+
+	function s:scale(sx,sy,sz)
+		local m=Matrix.fromVector(self)
+		m:applyScaleFactor(sx,sy,sz)
+		self.x,self.y,self.z,self.w = table.unpack(m[1])
+	end
+
+	function s:translate(tx,ty,tz)
+		local m=Matrix.fromVector(self)
+		m:applyTranslation(tx,ty,tz)
+		self.x,self.y,self.z,self.w = table.unpack(m[1])
 	end
 
 	function s:rotateAboutAxis(dir,angle)
 		local m=Matrix.fromVector(self)
 		m:applyAxisAngleRotation(dir,angle)
-		self.x,self.y,self.z = table.unpack(m[1])
+		self.x,self.y,self.z,self.w = table.unpack(m[1])
+	end
+
+	function s:canonical()
+		return Pos3D(self.x/self.w,self.y/self.w,self.z/self.w,1)
 	end
 
 	setmetatable(s,Pos3D.mti)
@@ -207,24 +224,24 @@ end
 
 function Pos3D.fromMatrix(m)
 	if m.rows~=1 or m.cols~=3 then return end
-	return Pos3D(m[1][1],m[1][2],m[1][3])
+	return Pos3D(m[1][1],m[1][2],m[1][3],m[1][4])
 end
 
 function Pos3D.mti.__add(self,v)
 	if not type(v) == "table" then return end
-	return Pos3D(self.x+v.x,self.y+v.y,self.z+v.z)
+	return Pos3D(self.x+v.x,self.y+v.y,self.z+v.z,self.w+v.w)
 end
 
 function Pos3D.mti.__sub(self,v)
 	if not type(v) == "table" then return end
-	return Pos3D(self.x-v.x,self.y-v.y,self.z-v.z)
+	return Pos3D(self.x-v.x,self.y-v.y,self.z-v.z,self.w-v.w)
 end
 
 function Pos3D.mti.__mul(self,v)
 	if type(v) == "number" then
-		return Pos3D(self.x*v,self.y*v,self.z*v)
+		return Pos3D(self.x*v,self.y*v,self.z*v,self.w*v)
 	elseif type(v) == "table" then
-		return Pos3D(self.x*v.x,self.y*v.y,self.z*v.z)
+		return Pos3D(self.x*v.x,self.y*v.y,self.z*v.z,self.w*v.w)
 	end
 end
 
@@ -310,8 +327,9 @@ Dir3D={}
 Dir3D.mt={}
 Dir3D.mti={}
 
-function Dir3D.mt.__call(self,x,y,z)
-	local s={x=x,y=y,z=z}
+function Dir3D.mt.__call(self,x,y,z,w)
+	local s={x=x,y=y,z=z,w=0}
+	if w~=nil then s.w=w end
 
 	function s:dot(p2)
 		return (self.x*p2.x)+(self.y*p2.y)+(self.z*p2.z)
@@ -320,13 +338,17 @@ function Dir3D.mt.__call(self,x,y,z)
 	function s:rotate(x,y,z)
 		local m=Matrix.fromVector(self)
 		m:applyRotation(x,y,z)
-		self.x,self.y,self.z = table.unpack(m[1])
+		self.x,self.y,self.z,self.w = table.unpack(m[1])
 	end
 
 	function s:rotateAboutAxis(dir,angle)
 		local m=Matrix.fromVector(self)
 		m:applyAxisAngleRotation(dir,angle)
-		self.x,self.y,self.z = table.unpack(m[1])
+		self.x,self.y,self.z,self.w = table.unpack(m[1])
+	end
+
+	function s:canonical()
+		return Dir3D(self.x/self.w,self.y/self.w,self.z/self.w,0)
 	end
 
 	setmetatable(s,Dir3D.mti)
@@ -335,29 +357,29 @@ end
 
 function Dir3D.mti.__add(self,v)
 	if not type(v) == "table" then return end
-	return Dir3D(self.x+v.x,self.y+v.y,self.z+v.z)
+	return Dir3D(self.x+v.x,self.y+v.y,self.z+v.z,self.w+v.w)
 end
 
 function Dir3D.mti.__sub(self,v)
 	if not type(v) == "table" then return end
-	return Dir3D(self.x-v.x,self.y-v.y,self.z-v.z)
+	return Dir3D(self.x-v.x,self.y-v.y,self.z-v.z,self.w-v.w)
 end
 
 function Dir3D.mti.__mul(self,v)
 	if type(v) == "table" then
-		return Dir3D(self.x*v.x,self.y*v.y,self.z*v.z)
+		return Dir3D(self.x*v.x,self.y*v.y,self.z*v.z,self.w*v.w)
 	elseif type(v) == "number" then
-		return Dir3D(self.x*v,self.y*v,self.z*v)
+		return Dir3D(self.x*v,self.y*v,self.z*v,self.w*v)
 	else return end
 end
 
 function Dir3D.mti.__unm(self)
-	return Dir3D(-self.x,-self.y,-self.z)
+	return Dir3D(-self.x,-self.y,-self.z,-self.w)
 end
 
 function Dir3D.fromMatrix(m)
 	if m.rows~=1 or m.cols~=3 then return end
-	return Dir3D(m[1][1],m[1][2],m[1][3])
+	return Dir3D(m[1][1],m[1][2],m[1][3],m[1][4])
 end
 
 setmetatable(Dir3D,Dir3D.mt)
@@ -413,15 +435,30 @@ function Matrix.mt.__call(self,rows,cols,fill)
 	function s:applyRotation(x,y,z)
 		local sin = math.sin
 		local cos = math.cos
-		local rx=Matrix(3,3)
 		local sinx,cosx = sin(x),cos(x)
-		rx.values={{1,0,0},{0,cosx,-sinx},{0,sinx,cosx}}
-		local ry=Matrix(3,3)
 		local siny,cosy = sin(y),cos(y)
-		ry.values={{cosy,0,siny},{0,1,0},{-siny,0,cosy}}
-		local rz=Matrix(3,3)
 		local sinz,cosz = sin(z),cos(z)
-		rz.values={{cosz,-sinz,0},{sinz,cosz,0},{0,0,1}}
+		local rx,ry,rz=Matrix(4,4),Matrix(4,4),Matrix(4,4)
+
+		rx.values={
+			{ 1, 0, 0, 0},
+			{ 0, cosx, -sinx, 0 },
+			{ 0, sinx, cosx, 0 },
+			{ 0, 0, 0, 1}
+		}
+		ry.values={
+			{ cosy, 0, siny, 0},
+			{ 0, 1, 0, 0 },
+			{ -siny, 0, cosy, 0 },
+			{ 0, 0, 0, 1}
+		}
+		rz.values={
+			{ cosz, -sinz, 0, 0},
+			{ sinz, cosz, 0, 0},
+			{ 0, 0, 1, 0},
+			{ 0, 0, 0, 1}
+		}
+
 		self.values = (self*(rx*ry*rz)).values
 	end
 
@@ -432,11 +469,34 @@ function Matrix.mt.__call(self,rows,cols,fill)
 		local x=dir.x
 		local y=dir.y
 		local z=dir.z
-		local Q=Matrix(3,3)
+		local Q=Matrix(4,4)
 		Q.values={
-			{ x*x*C+c, x*y*C-z*s, x*z*C+y*s },
-			{ y*x*C+z*s, y*y*C+c, y*z*C-x*s },
-			{ z*x*C-y*s, z*y*C+x*s, z*z*C+c },
+			{ x*x*C+c,   x*y*C-z*s, x*z*C+y*s, 0 },
+			{ y*x*C+z*s, y*y*C+c,   y*z*C-x*s, 0 },
+			{ z*x*C-y*s, z*y*C+x*s, z*z*C+c,   0 },
+			{ 0,         0,         0,         1 }
+		}
+		self.values = (self*Q).values
+	end
+
+	function s:applyScaleFactor(sx,sy,sz)
+		local Q=Matrix(4,4)
+		Q.values = {
+			{ sx, 0, 0, 0 },
+			{ 0, sy, 0, 0 },
+			{ 0, 0, sz, 0 },
+			{ 0, 0, 0, 1 }
+		}
+		self.values = (self*Q).values
+	end
+
+	function s:applyTranslation(tx,ty,tz)
+		local Q=Matrix(4,4)
+		Q.values = {
+			{ 1, 0, 0, tx },
+			{ 0, 1, 0, ty },
+			{ 0, 0, 1, tz },
+			{ 0, 0, 0, 1 }
 		}
 		self.values = (self*Q).values
 	end
@@ -452,8 +512,8 @@ function Matrix.mt.__call(self,rows,cols,fill)
 end
 
 function Matrix.fromVector(v)
-	local m=Matrix(1,3)
-	m.values={{v.x,v.y,v.z}}
+	local m=Matrix(1,4)
+	m.values={{v.x,v.y,v.z,v.w}}
 	return m
 end
 
@@ -687,15 +747,15 @@ function getMeshRelativeToOrigin(mesh,origin)
 	return newmesh
 end
 
-function updateViewportVectors()
-	viewport.center = translate3D(camera.pos,camera.rot,viewport.focalDist)
-	viewport.horizontalVector = Rot3D(camera.rot.x,camera.rot.y,camera.rot.z)
-	viewport.verticalVector = Rot3D(camera.rot.x,camera.rot.y,camera.rot.z)
-	viewport.horizontalVector:rotate(0,-math.pi/2,0)
-	viewport.verticalVector:rotateAboutAxis(viewport.horizontalVector,math.pi/2)
-	viewport.base = translate3D(viewport.center,viewport.horizontalVector,-viewport.size.w/2)
-	viewport.base = translate3D(viewport.base,viewport.verticalVector,viewport.size.h/2)
-end
+-- function updateViewportVectors()
+-- 	viewport.center = translate3D(camera.pos,camera.rot,viewport.focalDist)
+-- 	viewport.horizontalVector = Rot3D(camera.rot.x,camera.rot.y,camera.rot.z)
+-- 	viewport.verticalVector = Rot3D(camera.rot.x,camera.rot.y,camera.rot.z)
+-- 	viewport.horizontalVector:rotate(0,-math.pi/2,0)
+-- 	viewport.verticalVector:rotateAboutAxis(viewport.horizontalVector,math.pi/2)
+-- 	viewport.base = translate3D(viewport.center,viewport.horizontalVector,-viewport.size.w/2)
+-- 	viewport.base = translate3D(viewport.base,viewport.verticalVector,viewport.size.h/2)
+-- end
 
 function translate3D(pos,dir,dist)
 	local newX = pos.x+(dir.x*dist)
@@ -716,25 +776,6 @@ function dirBetween3DPoints(p1,p2)
 	local dz = p2.z-p1.z
 	return Dir3D(round(dx/dist,4),round(dy/dist,4),round(dz/dist,4))
 end
-
--- function renderPixel(x,y)
--- 	targetpos=screenSpaceToViewportSpace(x,y)
--- 	r=Ray.fromPoints(camera.pos,targetpos)
-
--- 	hit=scene.get(sphere):getHitPoint(r)
-
--- 	color = -1
-
--- 	if not hit or hit < 0 then
--- 		color=0
--- 	elseif scene.get(sphere).hasCustomRenderRoutine then
--- 		color=scene.get(sphere):renderColor(r,hit)
--- 	elseif hit>=0 or color==-1 then
--- 		-- checker pattern for missing render routine
--- 		color=12+((y%2)+(x%2))%2
--- 	end
--- 	screen.pixels[y][x] = color
--- end
 
 function updateMouseInfo()
 	if gmouse.x==nil then gmouse.x=0 end
@@ -764,10 +805,7 @@ function TIC()
 
 	if t==0 then
 		loadObjects()
-		cube=Object3D("mesh","knife",Pos3D(0,0,5),Rot3D(0,0,0),Dir3D(0,0,1),0.5)
-		-- Object3D("mesh","cube",Pos3D(1,3,8),Rot3D(0.03,math.pi/8,0.9),Dir3D(0,0,1),1)
-		--Object3D("mesh","knife",Pos3D(0,0,10),Rot3D(0,math.pi/8,0),Dir3D(0,0,1),6)
-		printTable(scene.loadedObjects.knife)
+		cube=Object3D("mesh","cube",Pos3D(0,0,5),Rot3D(0,0,0),Dir3D(0,0,1),0.5)
 	end
 
 	cls(0)
@@ -788,18 +826,17 @@ function TIC()
 	-- light.pos.z=10*math.cos(t/100)+15
 	-- light.pos.y=3*math.sin(t/180)
 
-	updateViewportVectors()
 	renderScreen()
 		
 	t=t+1
 end
 -- <MAP>
 -- 000:365726560000000000000000c00008008000008000008008008008008008008008008008008000008008008000008008008000008008008008008008008008008008008000008000008008008000008008008000008000008008008008008000008000008000008008008008008000008000008008008000008000008008008008008008008008008000008008008008008008008008008000008008008000008000008000008000008000008008008008008000008000008008008000008008008008008008008008008008008000008008008000008000008008008000008008008008008000008000008008008000
--- 001:0080000080000080000080080080000080000080000080000080080080000080000080080080080080000080000080080080080080000080080080000080080080080080000080080080000080080080080080000080000080000080000080000080b6e696665600000000000000820000f9ec5647efa1e3e120086963e66920dc6400f9ecb32e68685cea50316f89f2e950166220086989f2e9a1e3e1203d609c4569a1e3e1200869e037e0c8ec6a20086963e66920dc6420086989f2e9a1e3e108f9ec5647efa1e3e108f9ecb32e68685cea28086963e66920dc640029e041bce869fa6400f9ecb32e68685cea2008
--- 002:6963e66920dc64008ce08934e7f9f3e40029e041bce869fa64200869e037e0c8ec6a58316f89f2e95016622808691d88eb5016e1283d609c4569a1e3e128086963e66920dc6428086989f2e9a1e3e108f9ec5647efa1e3e128086963e66920dc6408f9ecb32e68685cea0829e041bce869fa64280869e037e0c8ec6a0829e041bce869fa64088ce08934e7f9f3e400f9ecb32e68685cea0029e041bce869fa640829e041bce869fa6450316f89f2e95016622008691d88eb5016e12808691d88eb5016e100f9ec5647efa1e3e100f9ecb32e68685cea08f9ecb32e68685cea20086989f2e9a1e3e100f9ec5647efa1e3
--- 003:e108f9ec5647efa1e3e1008ce08934e7f9f3e420086989f2e9296cef28086989f2e9296cef203d609c4569a1e3e1283d609c4569a1e3e12808691d88eb5016e10029e041bce869fa64008ce08934e7f9f3e4088ce08934e7f9f3e4203d609c4569a1e3e120086989f2e9a1e3e128086989f2e9a1e3e120086989f2e9296cef50316f89f2e950166258316f89f2e950166250316f89f2e9501662203d609c4569a1e3e12008691d88eb5016e1200869e037e0c8ec6a20086989f2e9a1e3e120086989f2e9296cef20086989f2e9296cef20086989f2e9a1e3e150316f89f2e950166220086989f2e9a1e3e120086963e6
--- 004:6920dc6400f9ec5647efa1e3e10029e041bce869fa6420086963e66920dc64200869e037e0c8ec6a008ce08934e7f9f3e4200869e037e0c8ec6a20086989f2e9296cef58316f89f2e9501662283d609c4569a1e3e128086989f2e9a1e3e158316f89f2e950166228086989f2e9a1e3e128086989f2e9296cef28086989f2e9296cef28086989f2e9a1e3e1280869e037e0c8ec6a280869e037e0c8ec6a28086989f2e9a1e3e128086963e66920dc6428086963e66920dc640829e041bce869fa64280869e037e0c8ec6a280869e037e0c8ec6a088ce08934e7f9f3e428086989f2e9296cef00f9ecb32e68685cea0829
--- 005:e041bce869fa6408f9ecb32e68685cea50316f89f2e95016622808691d88eb5016e158316f89f2e950166200f9ec5647efa1e3e108f9ecb32e68685cea08f9ec5647efa1e3e120086989f2e9a1e3e108f9ec5647efa1e3e128086989f2e9a1e3e1008ce08934e7f9f3e428086989f2e9296cef088ce08934e7f9f3e4203d609c4569a1e3e12808691d88eb5016e12008691d88eb5016e10029e041bce869fa64088ce08934e7f9f3e40829e041bce869fa64203d609c4569a1e3e128086989f2e9a1e3e1283d609c4569a1e3e120086989f2e9296cef58316f89f2e950166228086989f2e9296cef0000000000000000
+-- 001:0080000080000080000080080080000080000080000080000080080080000080000080080080080080000080000080080080080080000080080080000080080080080080000080080080000080080080080080000080000080000080000080000080b6e696665600000000000000820000f0dfa052d420f95d0060c65017d70074db00f0df50df5108da5600d04028b6d20098db0060c628b6d220f95d00845578555420f95d0060c61017de18745e0060c65017d70074db0060c628b6d220f95d08f0dfa052d420f95d08f0df50df5108da560860c65017d70074db00e0592041d52844db00f0df50df5108da560060
+-- 002:c65017d70074db00204028d6d238f15f00e0592041d52844db0060c61017de18745e08d04028b6d20098db0860c68872d40098db08845578555420f95d0860c65017d70074db0860c628b6d220f95d08f0dfa052d420f95d0860c65017d70074db08f0df50df5108da5608e0592041d52844db0860c61017de18745e08e0592041d52844db08204028d6d238f15f00f0df50df5108da5600e0592041d52844db08e0592041d52844db00d04028b6d20098db0060c68872d40098db0860c68872d40098db00f0dfa052d420f95d00f0df50df5108da5608f0df50df5108da560060c628b6d220f95d00f0dfa052d420f9
+-- 003:5d08f0dfa052d420f95d00204028d6d238f15f0060c628b6d2180e5b0860c628b6d2180e5b00845578555420f95d08845578555420f95d0860c68872d40098db00e0592041d52844db00204028d6d238f15f08204028d6d238f15f00845578555420f95d0060c628b6d220f95d0860c628b6d220f95d0060c628b6d2180e5b00d04028b6d20098db08d04028b6d20098db00d04028b6d20098db00845578555420f95d0060c68872d40098db0060c61017de18745e0060c628b6d220f95d0060c628b6d2180e5b0060c628b6d2180e5b0060c628b6d220f95d00d04028b6d20098db0060c628b6d220f95d0060c65017
+-- 004:d70074db00f0dfa052d420f95d00e0592041d52844db0060c65017d70074db0060c61017de18745e00204028d6d238f15f0060c61017de18745e0060c628b6d2180e5b08d04028b6d20098db08845578555420f95d0860c628b6d220f95d08d04028b6d20098db0860c628b6d220f95d0860c628b6d2180e5b0860c628b6d2180e5b0860c628b6d220f95d0860c61017de18745e0860c61017de18745e0860c628b6d220f95d0860c65017d70074db0860c65017d70074db08e0592041d52844db0860c61017de18745e0860c61017de18745e08204028d6d238f15f0860c628b6d2180e5b00f0df50df5108da5608e0
+-- 005:592041d52844db08f0df50df5108da5600d04028b6d20098db0860c68872d40098db08d04028b6d20098db00f0dfa052d420f95d08f0df50df5108da5608f0dfa052d420f95d0060c628b6d220f95d08f0dfa052d420f95d0860c628b6d220f95d00204028d6d238f15f0860c628b6d2180e5b08204028d6d238f15f00845578555420f95d0860c68872d40098db0060c68872d40098db00e0592041d52844db08204028d6d238f15f08e0592041d52844db00845578555420f95d0860c628b6d220f95d08845578555420f95d0060c628b6d2180e5b08d04028b6d20098db0860c628b6d2180e5b0000000000000000
 -- </MAP>
 
 -- <WAVES>

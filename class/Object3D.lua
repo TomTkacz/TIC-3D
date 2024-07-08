@@ -50,22 +50,22 @@ function Object3D._renderRoutines.mesh(self)
             local vertexPos = Pos3D(table.unpack(vertex))
 
             -- scale mesh
-            local vModelScaled = vertexPos*self.scale
+            vertexPos:scale(self.scale,self.scale,self.scale)
 
             -- translate/rotate mesh about its origin
-            local vModelRotated = vModelScaled
-            vModelRotated:rotateAboutAxis(Dir3D(1,0,0),self.rot.x)
-            vModelRotated:rotateAboutAxis(Dir3D(0,1,0),self.rot.y)
-            vModelRotated:rotateAboutAxis(Dir3D(0,0,1),self.rot.z)
-            vWorld = vModelRotated+self.origin
+            vertexPos:rotateAboutAxis(Dir3D(1,0,0),self.rot.x)
+            vertexPos:rotateAboutAxis(Dir3D(0,1,0),self.rot.y)
+            vertexPos:rotateAboutAxis(Dir3D(0,0,1),self.rot.z)
+            vertexPos:translate(self.origin.x,self.origin.y,self.origin.z)
 
             -- translate/rotate mesh about the camera
-            local vTranslated = vWorld-camera.pos
-            vTranslated:rotateAboutAxis(Dir3D(1,0,0),-camera.rot.x)
-            vTranslated:rotateAboutAxis(Dir3D(0,1,0),math.pi-camera.rot.y)
-            vTranslated:rotateAboutAxis(Dir3D(0,0,1),-camera.rot.z)
+            vertexPos:translate(-camera.pos.x,-camera.pos.y,-camera.pos.z)
+            vertexPos:rotateAboutAxis(Dir3D(1,0,0),-camera.rot.x)
+            vertexPos:rotateAboutAxis(Dir3D(0,1,0),math.pi-camera.rot.y)
+            vertexPos:rotateAboutAxis(Dir3D(0,0,1),-camera.rot.z)
 
-            local screenPos=worldSpaceToScreenSpace(vTranslated)
+            -- project 3D position to screen space
+            local screenPos = worldSpaceToScreenSpace(vertexPos)
 
             table.insert(data,screenPos.x)
             table.insert(data,screenPos.y)
