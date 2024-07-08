@@ -33,7 +33,7 @@ camera={
 function camera:rotate(x,y,z)
 	self.rot=self.rot+Rot3D(x,y,z)
 	self.dir = Dir3D(0,0,1)
-	self.dir:rotate(self.rot.x,self.rot.y,self.rot.z)
+	self.dir:rotate(self.rot.x,-self.rot.y,self.rot.z)
 end
 camera.dir:rotate(camera.rot.x,camera.rot.y,camera.rot.z)
 
@@ -174,8 +174,8 @@ function TIC()
 
 	if btn(0) then camera.pos=translate3D(camera.pos,camera.dir,0.1) end --forward
 	if btn(1) then camera.pos=translate3D(camera.pos,camera.dir,-0.1) end --backward
-	if btn(2) then camera:rotate(0,math.pi/32,0) end--right
-	if btn(3) then camera:rotate(0,-math.pi/32,0) end --left
+	if btn(2) then camera:rotate(0,-math.pi/32,0) end--right
+	if btn(3) then camera:rotate(0,math.pi/32,0) end --left
 
 	if gmouse.down then
 		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)
