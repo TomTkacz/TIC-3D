@@ -39,9 +39,13 @@ camera.dir:rotate(camera.rot.x,camera.rot.y,camera.rot.z)
 
 viewport={
 	size=Size2D(SCREEN_WIDTH,SCREEN_HEIGHT),
-	focalDist=100,
+	fov=90,
 	points={}
 }
+function viewport:updateFocalDist()
+	self.focalDist = self.size.w / ( 2*math.tan(self.fov/2) )
+end
+viewport:updateFocalDist()
 
 light={
 	pos=Pos3D(-5,6,5)
