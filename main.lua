@@ -7,6 +7,7 @@
 
 include "include.Utils"
 include "include.LoadObjects"
+include "class.Camera"
 include "class.Pos3D"
 include "class.Pos2D"
 include "class.Rot3D"
@@ -25,25 +26,15 @@ MAP_SIZE_BYTES=32640
 
 -- SCENE COMPONENTS --
 
-camera={
-	pos=Pos3D(0,0,0),
-	rot=Rot3D(0,0,0),
-	dir=Dir3D(0,0,1),
-}
-function camera:rotate(x,y,z)
-	self.rot=self.rot+Rot3D(x,y,z)
-	self.dir = Dir3D(0,0,1)
-	self.dir:rotate(self.rot.x,-self.rot.y,self.rot.z)
-end
-camera.dir:rotate(camera.rot.x,camera.rot.y,camera.rot.z)
+camera=Camera( Pos3D(0,0,0), Rot3D(0,0,0), Dir3D(0,0,1) )
 
 viewport={
 	size=Size2D(SCREEN_WIDTH,SCREEN_HEIGHT),
 	fov=90,
-	points={}
 }
 function viewport:updateFocalDist()
-	self.focalDist = self.size.w / ( 2*math.tan(self.fov/2) )
+	self._focalDist = self.size.w / ( 2*math.tan(self.fov/2) )
+	self._vfov = math.deg( 2 * math.atan( self.size.h, (2*self._focalDist) ) )
 end
 viewport:updateFocalDist()
 
@@ -68,8 +59,8 @@ scene={
 
 function worldSpaceToViewportSpace(pos)
 	local x,y,z = pos.x,pos.y,pos.z
-	local vpX = (x*viewport.focalDist)/z
-	local vpY = (y*viewport.focalDist)/z
+	local vpX = (x*viewport._focalDist)/z
+	local vpY = (y*viewport._focalDist)/z
 	return Pos2D(vpX+viewport.size.w/2,vpY+viewport.size.h/2)
 end
 
@@ -112,16 +103,6 @@ function getMeshRelativeToOrigin(mesh,origin)
 	end
 	return newmesh
 end
-
--- function updateViewportVectors()
--- 	viewport.center = translate3D(camera.pos,camera.rot,viewport.focalDist)
--- 	viewport.horizontalVector = Rot3D(camera.rot.x,camera.rot.y,camera.rot.z)
--- 	viewport.verticalVector = Rot3D(camera.rot.x,camera.rot.y,camera.rot.z)
--- 	viewport.horizontalVector:rotate(0,-math.pi/2,0)
--- 	viewport.verticalVector:rotateAboutAxis(viewport.horizontalVector,math.pi/2)
--- 	viewport.base = translate3D(viewport.center,viewport.horizontalVector,-viewport.size.w/2)
--- 	viewport.base = translate3D(viewport.base,viewport.verticalVector,viewport.size.h/2)
--- end
 
 function translate3D(pos,dir,dist)
 	local newX = pos.x+(dir.x*dist)
@@ -170,6 +151,7 @@ function TIC()
 	updateMouseInfo()
 
 	if t==0 then
+		camera:updatePlaneDistances()
 		loadObjects()
 		cube=Object3D("mesh","cube",Pos3D(0,0,5),Rot3D(0,0,0),Dir3D(0,0,1),0.5)
 	end
@@ -178,12 +160,14 @@ function TIC()
 
 	if btn(0) then camera.pos=translate3D(camera.pos,camera.dir,0.1) end --forward
 	if btn(1) then camera.pos=translate3D(camera.pos,camera.dir,-0.1) end --backward
-	if btn(2) then camera:rotate(0,-math.pi/32,0) end--right
-	if btn(3) then camera:rotate(0,math.pi/32,0) end --left
+	if btn(2) then camera:rotate( Rot3D(0,-math.pi/32,0) ) end --right
+	if btn(3) then camera:rotate( Rot3D(0,math.pi/32,0) ) end --left
+
+	camera:updateVectors()
 
 	if gmouse.down then
 		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)
-		camera:rotate(0,-(2*math.pi)*(physicalSpace/viewport.size.w),0)
+		camera:rotate( Rot3D(0,2*math.pi*(physicalSpace/viewport.size.w),0) )
 	end
 
 	scene.get(cube).rot:rotate(0,math.pi/64,0)

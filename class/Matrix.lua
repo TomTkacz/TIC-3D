@@ -33,7 +33,7 @@ function Matrix.mt.__call(self,rows,cols,fill)
 			{ 0, 0, 0, 1}
 		}
 
-		self.values = (self*(rx*ry*rz)).values
+		self.values = ((rx*ry*rz)*self).values
 	end
 
 	function s:applyAxisAngleRotation(dir,angle)

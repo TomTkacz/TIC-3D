@@ -17,16 +17,16 @@ function Dir3D.mt.__call(self,x,y,z,w)
 	end
 
 	function s:rotate(x,y,z)
-		local m=Matrix.fromVector(self)
+		local m=self.matrix
 		m:applyRotation(x,y,z)
-		self.x,self.y,self.z,self.w = table.unpack(m[1])
+		self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
 		self:updateMatrix()
 	end
 
 	function s:rotateAboutAxis(dir,angle)
-		local m=Matrix.fromVector(self)
+		local m=self.matrix
 		m:applyAxisAngleRotation(dir,angle)
-		self.x,self.y,self.z,self.w = table.unpack(m[1])
+		self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
 		self:updateMatrix()
 	end
 
