@@ -37,6 +37,37 @@ function Pos3D.mt.__call(self,x,y,z,w)
 		self:updateMatrix()
 	end
 
+	function s:toLocalTransform(origin,rot,scale)
+
+		local vertexPos = self:canonical()
+
+		-- scale
+		vertexPos:scale(scale,scale,scale)
+
+		-- translate/rotate about the origin
+		vertexPos:rotateAboutAxis(Dir3D(1,0,0),rot.x)
+		vertexPos:rotateAboutAxis(Dir3D(0,1,0),rot.y)
+		vertexPos:rotateAboutAxis(Dir3D(0,0,1),rot.z)
+		vertexPos:translate(origin.x,origin.y,origin.z)
+
+		return vertexPos
+
+	end
+
+	function s:toCameraTransform()
+
+		local vertexPos = self:canonical()
+
+		-- translate/rotate about the camera
+		vertexPos:translate(-camera.pos.x,-camera.pos.y,-camera.pos.z)
+		vertexPos:rotateAboutAxis(Dir3D(1,0,0),-camera.rot.x)
+		vertexPos:rotateAboutAxis(Dir3D(0,1,0),math.pi-camera.rot.y)
+		vertexPos:rotateAboutAxis(Dir3D(0,0,1),-camera.rot.z)
+
+		return vertexPos
+
+	end
+
 	function s:canonical()
 		return Pos3D(self.x/self.w,self.y/self.w,self.z/self.w,1)
 	end
@@ -65,6 +96,14 @@ function Pos3D.mti.__mul(self,v)
 		return Pos3D(self.x*v,self.y*v,self.z*v,self.w*v)
 	elseif type(v) == "table" then
 		return Pos3D(self.x*v.x,self.y*v.y,self.z*v.z,self.w*v.w)
+	end
+end
+
+function Pos3D.mti.__div(self,v)
+	if type(v) == "number" then
+		return Pos3D(self.x/v,self.y/v,self.z/v,self.w/v)
+	elseif type(v) == "table" then
+		return Pos3D(self.x/v.x,self.y/v.y,self.z/v.z,self.w/v.w)
 	end
 end
 

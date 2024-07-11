@@ -21,10 +21,10 @@ function Camera.mt.__call(self,pos,rot,dir)
         self.clippingPlanes.near = self.dir:canonical()
 
         self.clippingPlanes.left = self.dir:canonical()
-        self.clippingPlanes.left:rotateAboutAxis(self.verticalVector,-(math.rad(viewport.fov)/2)+(math.pi/2))
+        self.clippingPlanes.left:rotateAboutAxis(self.verticalVector,-(viewport.fov/2)+(math.pi/2))
 
         self.clippingPlanes.right = self.dir:canonical()
-        self.clippingPlanes.right:rotateAboutAxis(self.verticalVector,(math.rad(viewport.fov)/2)-(math.pi/2))
+        self.clippingPlanes.right:rotateAboutAxis(self.verticalVector,(viewport.fov/2)-(math.pi/2))
 
         self.clippingPlanes.top = self.dir:canonical()
         self.clippingPlanes.top:rotateAboutAxis(self.horizontalVector,(viewport._vfov/2)-(math.pi/2))
@@ -41,7 +41,7 @@ function Camera.mt.__call(self,pos,rot,dir)
         self.horizontalVector,self.verticalVector = horizontalVector,verticalVector
     end
 
-    function s:pointIsInView(p)
+    function s:isPointInView(p)
         local isInView = true
 
         local planeDistFromOrigin = -( self.clippingPlanes.near:dot(self.pos) )
