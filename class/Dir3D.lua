@@ -31,7 +31,9 @@ function Dir3D.mt.__call(self,x,y,z,w)
 	end
 
 	function s:canonical()
-		return Dir3D(self.x/self.w,self.y/self.w,self.z/self.w,0)
+		local div=self.w
+		if self.w == 0 then div = 1 end
+		return Dir3D(self.x/div,self.y/div,self.z/div,0)
 	end
 
 	setmetatable(s,Dir3D.mti)

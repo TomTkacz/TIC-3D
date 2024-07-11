@@ -58,6 +58,10 @@ function Object3D._renderRoutines.mesh(self)
             vertexPos:rotateAboutAxis(Dir3D(0,0,1),self.rot.z)
             vertexPos:translate(self.origin.x,self.origin.y,self.origin.z)
 
+            local color = 12
+            local pVisible = camera:pointIsInView(vertexPos)
+            if not pVisible then color = 0 end
+
             -- translate/rotate mesh about the camera
             vertexPos:translate(-camera.pos.x,-camera.pos.y,-camera.pos.z)
             vertexPos:rotateAboutAxis(Dir3D(1,0,0),-camera.rot.x)
@@ -69,8 +73,12 @@ function Object3D._renderRoutines.mesh(self)
 
             table.insert(data,screenPos.x)
             table.insert(data,screenPos.y)
+            circ(screenPos.x,screenPos.y,1,color)
+            line(0,0,0,150,8)
+            line(SCREEN_WIDTH-1,0,SCREEN_WIDTH-1,150,8)
         end
+
         table.insert(data,(i%11)+1)
-        tri(table.unpack(data))
+        --tri(table.unpack(data))
     end
 end

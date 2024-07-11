@@ -34,7 +34,7 @@ viewport={
 }
 function viewport:updateFocalDist()
 	self._focalDist = self.size.w / ( 2*math.tan(self.fov/2) )
-	self._vfov = math.deg( 2 * math.atan( self.size.h, (2*self._focalDist) ) )
+	self._vfov = 2 * math.atan( self.size.h, (2*self._focalDist) ) -- in radians
 end
 viewport:updateFocalDist()
 
@@ -151,7 +151,8 @@ function TIC()
 	updateMouseInfo()
 
 	if t==0 then
-		camera:updatePlaneDistances()
+		camera:updateVectors()
+		camera:updateClippingPlanes()
 		loadObjects()
 		cube=Object3D("mesh","cube",Pos3D(0,0,5),Rot3D(0,0,0),Dir3D(0,0,1),0.5)
 	end
@@ -164,19 +165,19 @@ function TIC()
 	if btn(3) then camera:rotate( Rot3D(0,math.pi/32,0) ) end --left
 
 	camera:updateVectors()
+	camera:updateClippingPlanes()
 
 	if gmouse.down then
 		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)
 		camera:rotate( Rot3D(0,2*math.pi*(physicalSpace/viewport.size.w),0) )
 	end
 
-	scene.get(cube).rot:rotate(0,math.pi/64,0)
+	--scene.get(cube).rot:rotate(0,math.pi/64,0)
 
 	-- light.pos.x=10*math.sin(t/100)
 	-- light.pos.z=10*math.cos(t/100)+15
 	-- light.pos.y=3*math.sin(t/180)
 
 	renderScreen()
-		
 	t=t+1
 end
