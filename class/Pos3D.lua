@@ -12,6 +12,10 @@ function Pos3D.mt.__call(self,x,y,z,w)
 		self.matrix.values={{self.x},{self.y},{self.z},{self.w}}
 	end
 
+	function s:copy()
+		return Pos3D(self.x,self.y,self.z,self.w)
+	end
+
 	function s:dot(p2)
 		return (self.x*p2.x)+(self.y*p2.y)+(self.z*p2.z)+(self.w*p2.w)
 	end
@@ -46,7 +50,7 @@ function Pos3D.mt.__call(self,x,y,z,w)
 
 	function s:toLocalTransform(origin,rot,scale)
 
-		local vertexPos = self:canonical()
+		local vertexPos = self:copy()
 
 		-- scale
 		vertexPos:scale(scale,scale,scale)

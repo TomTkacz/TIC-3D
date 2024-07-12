@@ -38,7 +38,7 @@ function loadObjects()
 
 		for a=1,numberOfTriangles do
 
-			triangle={}
+			triangle={vertices={}}
 
 			for b=1,3 do
 
@@ -84,9 +84,11 @@ function loadObjects()
 					bytesOffset = bytesOffset + 1
 				end
 
-				table.insert(triangle,vertex)
+				table.insert(triangle.vertices,Pos3D(table.unpack(vertex)))
 				
 			end
+
+			triangle.center = getTriangleCircumcenter(triangle.vertices[1],triangle.vertices[2],triangle.vertices[3])
 
 			table.insert(mesh.triangles,triangle)
 

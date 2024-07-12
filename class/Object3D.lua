@@ -45,30 +45,25 @@ function Object3D._renderRoutines.mesh(self)
     for i,triangle in pairs(mesh.triangles) do
         data={}
 
-        local triangleCenter = getTriangleCircumcenter(Pos3D(table.unpack(triangle[1])),Pos3D(table.unpack(triangle[2])),Pos3D(table.unpack(triangle[3])))
-        local triangleCenterScreen = worldSpaceToScreenSpace(triangleCenter:toLocalTransform(self.origin,self.rot,self.scale):toCameraTransform())
-        -- local clippingSphereRadius = distBetween3DPoints(triangleCenter,Pos3D(table.unpack(triangle[1])))
-        
-        local triangleIsVisible = true
+        local triangleCenter = triangle.center:toLocalTransform(self.origin,self.rot,self.scale)
+        local triangleBoundingSphereRadius = distBetween3DPoints( triangleCenter, triangle.vertices[1]:toLocalTransform(self.origin,self.rot,self.scale) )
+        if camera:isPointInView(triangleCenter,triangleBoundingSphereRadius) then
 
-        for _,vertex in ipairs(triangle) do
+            for _,vertex in ipairs(triangle.vertices) do
 
-            local vertexPos = Pos3D(table.unpack(vertex))
-            local vertexLocalTransformPos = vertexPos:toLocalTransform(self.origin,self.rot,self.scale)
-            if not camera:isPointInView(vertexLocalTransformPos) then triangleIsVisible = false end
-            local vertexCamPos = vertexLocalTransformPos:toCameraTransform()
-            local screenPos = worldSpaceToScreenSpace(vertexCamPos)
+                local vertexPos = vertex:copy()
+                local vertexLocalTransformPos = vertexPos:toLocalTransform(self.origin,self.rot,self.scale)
+                local vertexCamPos = vertexLocalTransformPos:toCameraTransform()
+                local screenPos = worldSpaceToScreenSpace(vertexCamPos)
 
-            table.insert(data,screenPos.x)
-            table.insert(data,screenPos.y)
+                table.insert(data,screenPos.x)
+                table.insert(data,screenPos.y)
 
-        end
+            end
 
-        if triangleIsVisible then
             table.insert(data,(i%11)+1)
             tri(table.unpack(data))
-            circ(triangleCenterScreen.x,triangleCenterScreen.y,2,0)
-            pix(triangleCenterScreen.x,triangleCenterScreen.y,(i%11)+1)
+
         end
     end
 end

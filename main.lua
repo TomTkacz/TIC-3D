@@ -80,10 +80,10 @@ end
 function calculateMeshOrigin(mesh)
 	local xAvg,yAvg,zAvg=0,0,0
 	for _,triangle in pairs(mesh.triangles) do
-		for _,vertex in pairs(triangle) do
-			xAvg=xAvg+vertex[1]
-			yAvg=yAvg+vertex[2]
-			zAvg=zAvg+vertex[3]
+		for _,vertex in pairs(triangle.vertices) do
+			xAvg=xAvg+vertex.x
+			yAvg=yAvg+vertex.y
+			zAvg=zAvg+vertex.z
 		end
 	end
 	xAvg=xAvg/mesh.numberOfTriangles

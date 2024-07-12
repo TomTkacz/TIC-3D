@@ -18,50 +18,53 @@ function Camera.mt.__call(self,pos,rot,dir)
     function s:updateClippingPlanes()
 
         self.clippingPlanes = {}
-        self.clippingPlanes.near = self.dir:canonical()
+        self.clippingPlanes.near = self.dir:copy()
 
-        self.clippingPlanes.left = self.dir:canonical()
+        self.clippingPlanes.left = self.dir:copy()
         self.clippingPlanes.left:rotateAboutAxis(self.verticalVector,-(viewport.fov/2)+(math.pi/2))
 
-        self.clippingPlanes.right = self.dir:canonical()
+        self.clippingPlanes.right = self.dir:copy()
         self.clippingPlanes.right:rotateAboutAxis(self.verticalVector,(viewport.fov/2)-(math.pi/2))
 
-        self.clippingPlanes.top = self.dir:canonical()
+        self.clippingPlanes.top = self.dir:copy()
         self.clippingPlanes.top:rotateAboutAxis(self.horizontalVector,(viewport._vfov/2)-(math.pi/2))
 
-        self.clippingPlanes.bottom = self.dir:canonical()
+        self.clippingPlanes.bottom = self.dir:copy()
         self.clippingPlanes.bottom:rotateAboutAxis(self.horizontalVector,-(viewport._vfov/2)+(math.pi/2))
 
     end
 
     function s:updateVectors()
-        local horizontalVector,verticalVector = self.dir:canonical(),self.dir:canonical()
+        local horizontalVector,verticalVector = self.dir:copy(),self.dir:copy()
         horizontalVector:rotate(0,-math.pi/2,0) -- points right (will need to fixed if cam points up or down)
         verticalVector:rotateAboutAxis(horizontalVector,math.pi/2) -- points up
         self.horizontalVector,self.verticalVector = horizontalVector,verticalVector
     end
 
-    function s:isPointInView(p)
+    function s:isPointInView(p,r)
+        if r==nil then r=0 end
+        local cameraPos = self.pos
+        local clippingPlanes = self.clippingPlanes
         local isInView = true
 
-        local planeDistFromOrigin = -( self.clippingPlanes.near:dot(self.pos) )
-        isInView = true and self.clippingPlanes.near:dot(p) + planeDistFromOrigin >= 0
+        local planeDistFromOrigin = -( clippingPlanes.near:dot(cameraPos) )
+        isInView = true and clippingPlanes.near:dot(p) + planeDistFromOrigin >= -r
         if not isInView then return false end
 
-        planeDistFromOrigin = -( self.clippingPlanes.left:dot(self.pos) )
-        isInView = true and self.clippingPlanes.left:dot(p) + planeDistFromOrigin >= 0
+        planeDistFromOrigin = -( clippingPlanes.left:dot(cameraPos) )
+        isInView = true and clippingPlanes.left:dot(p) + planeDistFromOrigin >= -r
         if not isInView then return false end
 
-        planeDistFromOrigin = -( self.clippingPlanes.right:dot(self.pos) )
-        isInView = true and self.clippingPlanes.right:dot(p) + planeDistFromOrigin >= 0
+        planeDistFromOrigin = -( clippingPlanes.right:dot(cameraPos) )
+        isInView = true and clippingPlanes.right:dot(p) + planeDistFromOrigin >= -r
         if not isInView then return false end
 
-        planeDistFromOrigin = -( self.clippingPlanes.top:dot(self.pos) )
-        isInView = true and self.clippingPlanes.top:dot(p) + planeDistFromOrigin >= 0
+        planeDistFromOrigin = -( clippingPlanes.top:dot(cameraPos) )
+        isInView = true and clippingPlanes.top:dot(p) + planeDistFromOrigin >= -r
         if not isInView then return false end
 
-        planeDistFromOrigin = -( self.clippingPlanes.bottom:dot(self.pos) )
-        isInView = true and self.clippingPlanes.bottom:dot(p) + planeDistFromOrigin >= 0
+        planeDistFromOrigin = -( clippingPlanes.bottom:dot(cameraPos) )
+        isInView = true and clippingPlanes.bottom:dot(p) + planeDistFromOrigin >= -r
         if not isInView then return false end
 
         return isInView

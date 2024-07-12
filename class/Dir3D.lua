@@ -8,6 +8,10 @@ function Dir3D.mt.__call(self,x,y,z,w)
 	s.matrix=Matrix(4,1)
 	s.matrix.values={{s.x},{s.y},{s.z},{s.w}}
 
+	function s:copy()
+		return Dir3D(self.x,self.y,self.z,self.w)
+	end
+
 	function s:updateMatrix()
 		self.matrix.values={{self.x},{self.y},{self.z},{self.w}}
 	end
