@@ -37,6 +37,13 @@ function Pos3D.mt.__call(self,x,y,z,w)
 		self:updateMatrix()
 	end
 
+	function s:cross(v)
+		local x = ( self.y * v.z ) - ( v.y * self.z )
+		local y = ( self.z * v.x ) - ( v.z * self.x )
+		local z = ( self.x * v.y ) - ( v.x * self.y )
+		return Pos3D(x,y,z,self.w)
+	end
+
 	function s:toLocalTransform(origin,rot,scale)
 
 		local vertexPos = self:canonical()
@@ -54,6 +61,13 @@ function Pos3D.mt.__call(self,x,y,z,w)
 
 	end
 
+	function s:magnitude()
+		if s.w == 0 then
+			return math.sqrt(self:dot(self))
+		end
+		return math.sqrt(math.abs(self:dot(self)-1))
+	end
+
 	function s:toCameraTransform()
 
 		local vertexPos = self:canonical()
@@ -69,7 +83,9 @@ function Pos3D.mt.__call(self,x,y,z,w)
 	end
 
 	function s:canonical()
-		return Pos3D(self.x/self.w,self.y/self.w,self.z/self.w,1)
+		local div = 1
+		if self.w ~= 0 then div=self.w end
+		return Pos3D(self.x/div,self.y/div,self.z/div,1)
 	end
 
 	setmetatable(s,Pos3D.mti)
@@ -77,7 +93,7 @@ function Pos3D.mt.__call(self,x,y,z,w)
 end
 
 function Pos3D.fromMatrix(m)
-	if m.rows~=1 or m.cols~=3 then return end
+	if m.rows>4 or m.cols>4 then return end
 	return Pos3D(m[1][1],m[1][2],m[1][3],m[1][4])
 end
 

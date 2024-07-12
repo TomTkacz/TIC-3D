@@ -124,6 +124,46 @@ function dirBetween3DPoints(p1,p2)
 	return Dir3D(round(dx/dist,4),round(dy/dist,4),round(dz/dist,4))
 end
 
+function getSurfaceNormal(p1,p2,p3)
+	local a = p2 - p1
+	local b = p3 - p1
+	local nX = a.y * b.z - a.z * b.y
+	local nY = a.z * b.x - a.x * b.z
+	local nZ = a.x * b.y - a.y * b.x
+	return Dir3D(nX,nY,nZ)
+end
+
+function getTriangleCircumcenter(pA,pB,pC)
+	local faceNormal = getSurfaceNormal(pA,pB,pC)
+
+	local abMidpoint = (pA+pB)/2
+	local abPerpDir = dirBetween3DPoints(pA,pB)
+	abPerpDir:rotateAboutAxis(faceNormal,math.pi/2)
+
+	local bcMidpoint = (pB+pC)/2
+	local bcPerpDir = dirBetween3DPoints(pB,pC)
+	bcPerpDir:rotateAboutAxis(faceNormal,math.pi/2)
+
+	-- L1 = abMidpoint + a * abPerpDir
+	-- L2 = bcMidpoint + b * bcPerpDir
+	-- abMidpoint + a * abPerpDir = bcMidpoint + b * bcPerpDir
+	-- a * abPerpDir = ( bcMidpoint - abMidpoint ) + b * bcPerpDir
+	-- a * ( abPerpDir * bcPerpDir ) = ( bcMidpoint - abMidpoint ) * bcPerpDir
+
+	local a = 0
+	local lastDifference = math.huge
+	while a < 5 do
+		local left = ( abPerpDir:cross(bcPerpDir) ) * a
+		local right = ( bcMidpoint - abMidpoint ):cross(bcPerpDir)
+		local difference = (left-right):magnitude()
+		if difference > lastDifference then break end
+		lastDifference = difference
+		a=a+0.01
+	end
+
+	return translate3D(abMidpoint,abPerpDir,a)
+end
+
 function updateMouseInfo()
 	if gmouse.x==nil then gmouse.x=0 end
 	if gmouse.y==nil then gmouse.y=0 end

@@ -45,9 +45,9 @@ function Object3D._renderRoutines.mesh(self)
     for i,triangle in pairs(mesh.triangles) do
         data={}
 
-        -- local triangleCenter = ( Pos3D(table.unpack(triangle[1])) + Pos3D(table.unpack(triangle[2])) + Pos3D(table.unpack(triangle[3])) ) / 3
+        local triangleCenter = getTriangleCircumcenter(Pos3D(table.unpack(triangle[1])),Pos3D(table.unpack(triangle[2])),Pos3D(table.unpack(triangle[3])))
+        local triangleCenterScreen = worldSpaceToScreenSpace(triangleCenter:toLocalTransform(self.origin,self.rot,self.scale):toCameraTransform())
         -- local clippingSphereRadius = distBetween3DPoints(triangleCenter,Pos3D(table.unpack(triangle[1])))
-        -- local centerPos = triangleCenter:getScreenPos(self.origin,self.rot,self.scale)
         
         local triangleIsVisible = true
 
@@ -67,7 +67,8 @@ function Object3D._renderRoutines.mesh(self)
         if triangleIsVisible then
             table.insert(data,(i%11)+1)
             tri(table.unpack(data))
-            --circ(centerPos.x,centerPos.y,3,12)
+            circ(triangleCenterScreen.x,triangleCenterScreen.y,2,0)
+            pix(triangleCenterScreen.x,triangleCenterScreen.y,(i%11)+1)
         end
     end
 end

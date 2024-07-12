@@ -16,6 +16,13 @@ function Dir3D.mt.__call(self,x,y,z,w)
 		return (self.x*p2.x)+(self.y*p2.y)+(self.z*p2.z)
 	end
 
+	function s:cross(v)
+		local x = ( self.y * v.z ) - ( v.y * self.z )
+		local y = ( self.z * v.x ) - ( v.z * self.x )
+		local z = ( self.x * v.y ) - ( v.x * self.y )
+		return Dir3D(x,y,z,self.w)
+	end
+
 	function s:rotate(x,y,z)
 		local m=self.matrix
 		m:applyRotation(x,y,z)
@@ -34,6 +41,14 @@ function Dir3D.mt.__call(self,x,y,z,w)
 		local div=self.w
 		if self.w == 0 then div = 1 end
 		return Dir3D(self.x/div,self.y/div,self.z/div,0)
+	end
+
+	function s:magnitude()
+		local v = self:canonical()
+		if v.w == 0 then
+			return math.sqrt(math.abs(v:dot(v)))
+		end
+		return math.sqrt(math.abs(v:dot(v))-1)
 	end
 
 	setmetatable(s,Dir3D.mti)
@@ -63,7 +78,7 @@ function Dir3D.mti.__unm(self)
 end
 
 function Dir3D.fromMatrix(m)
-	if m.rows~=1 or m.cols~=3 then return end
+	if m.rows>4 or m.cols>4 then return end
 	return Dir3D(m[1][1],m[1][2],m[1][3],m[1][4])
 end
 
