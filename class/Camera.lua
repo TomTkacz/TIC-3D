@@ -18,19 +18,35 @@ function Camera.mt.__call(self,pos,rot,dir)
     function s:updateClippingPlanes()
 
         self.clippingPlanes = {}
-        self.clippingPlanes.near = self.dir:copy()
 
-        self.clippingPlanes.left = self.dir:copy()
-        self.clippingPlanes.left:rotateAboutAxis(self.verticalVector,-(viewport.fov/2)+(math.pi/2))
+        self.clippingPlanes.near = {
+            origin=self.pos,
+            normal=self.dir:copy(),
+        }
 
-        self.clippingPlanes.right = self.dir:copy()
-        self.clippingPlanes.right:rotateAboutAxis(self.verticalVector,(viewport.fov/2)-(math.pi/2))
+        self.clippingPlanes.left = {
+            origin=self.pos,
+            normal=self.dir:copy(),
+        }
+        self.clippingPlanes.left.normal:rotateAboutAxis(self.verticalVector,-(viewport.fov/2)+(math.pi/2))
 
-        self.clippingPlanes.top = self.dir:copy()
-        self.clippingPlanes.top:rotateAboutAxis(self.horizontalVector,(viewport._vfov/2)-(math.pi/2))
+        self.clippingPlanes.right = {
+            origin=self.pos,
+            normal=self.dir:copy(),
+        }
+        self.clippingPlanes.right.normal:rotateAboutAxis(self.verticalVector,(viewport.fov/2)-(math.pi/2))
 
-        self.clippingPlanes.bottom = self.dir:copy()
-        self.clippingPlanes.bottom:rotateAboutAxis(self.horizontalVector,-(viewport._vfov/2)+(math.pi/2))
+        self.clippingPlanes.top = {
+            origin=self.pos,
+            normal=self.dir:copy(),
+        }
+        self.clippingPlanes.top.normal:rotateAboutAxis(self.horizontalVector,(viewport._vfov/2)-(math.pi/2))
+
+        self.clippingPlanes.bottom = {
+            origin=self.pos,
+            normal=self.dir:copy(),
+        }
+        self.clippingPlanes.bottom.normal:rotateAboutAxis(self.horizontalVector,-(viewport._vfov/2)+(math.pi/2))
 
     end
 
@@ -46,28 +62,35 @@ function Camera.mt.__call(self,pos,rot,dir)
         local cameraPos = self.pos
         local clippingPlanes = self.clippingPlanes
         local isInView = true
+        local planesClipped = {}
+        local errorMargin = 0.01
 
-        local planeDistFromOrigin = -( clippingPlanes.near:dot(cameraPos) )
-        isInView = true and clippingPlanes.near:dot(p) + planeDistFromOrigin >= -r
-        if not isInView then return false end
+        local planeDistFromOrigin = -( clippingPlanes.near.normal:dot(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.near.normal:dot(p) + planeDistFromOrigin
+        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
+        if signedDistanceToPlane < -r - errorMargin then table.insert(planesClipped,"near") end
 
-        planeDistFromOrigin = -( clippingPlanes.left:dot(cameraPos) )
-        isInView = true and clippingPlanes.left:dot(p) + planeDistFromOrigin >= -r
-        if not isInView then return false end
+        local planeDistFromOrigin = -( clippingPlanes.left.normal:dot(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.left.normal:dot(p) + planeDistFromOrigin
+        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
+        if signedDistanceToPlane < -r - errorMargin then table.insert(planesClipped,"left") end
 
-        planeDistFromOrigin = -( clippingPlanes.right:dot(cameraPos) )
-        isInView = true and clippingPlanes.right:dot(p) + planeDistFromOrigin >= -r
-        if not isInView then return false end
+        local planeDistFromOrigin = -( clippingPlanes.right.normal:dot(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.right.normal:dot(p) + planeDistFromOrigin
+        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
+        if signedDistanceToPlane < -r - errorMargin then table.insert(planesClipped,"right") end
 
-        planeDistFromOrigin = -( clippingPlanes.top:dot(cameraPos) )
-        isInView = true and clippingPlanes.top:dot(p) + planeDistFromOrigin >= -r
-        if not isInView then return false end
+        local planeDistFromOrigin = -( clippingPlanes.top.normal:dot(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.top.normal:dot(p) + planeDistFromOrigin
+        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
+        if signedDistanceToPlane < -r - errorMargin then table.insert(planesClipped,"top") end
 
-        planeDistFromOrigin = -( clippingPlanes.bottom:dot(cameraPos) )
-        isInView = true and clippingPlanes.bottom:dot(p) + planeDistFromOrigin >= -r
-        if not isInView then return false end
+        local planeDistFromOrigin = -( clippingPlanes.bottom.normal:dot(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.bottom.normal:dot(p) + planeDistFromOrigin
+        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
+        if signedDistanceToPlane < -r - errorMargin then table.insert(planesClipped,"bottom") end
 
-        return isInView
+        return isInView,planesClipped
     end
 
     setmetatable(s,Camera.mti)

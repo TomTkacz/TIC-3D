@@ -66,6 +66,14 @@ function copyTable(obj, seen)
     return res
 end
 
+function getVectorPlaneIntersection(pos,dir,plane)
+    pos = pos:canonical()
+    dir = dir:canonical()
+    if plane.normal:dot(dir) == 0 then return end
+    local t = ( plane.normal:dot(plane.origin) - plane.normal:dot(pos) ) / plane.normal:dot(dir)
+    return pos + ( dir * t )
+end
+
 function inRads(v)
     return v%(2*math.pi)
 end
@@ -114,7 +122,7 @@ function loadObjects()
 
 		for a=1,numberOfTriangles do
 
-			triangle={}
+			triangle={vertices={}}
 
 			for b=1,3 do
 
@@ -160,9 +168,11 @@ function loadObjects()
 					bytesOffset = bytesOffset + 1
 				end
 
-				table.insert(triangle,vertex)
+				table.insert(triangle.vertices,Pos3D(table.unpack(vertex)))
 				
 			end
+
+			triangle.center = getTriangleCircumcenter(triangle.vertices[1],triangle.vertices[2],triangle.vertices[3])
 
 			table.insert(mesh.triangles,triangle)
 
@@ -182,6 +192,130 @@ end
 
 -- [/TQ-Bundler: include.LoadObjects]
 
+-- [TQ-Bundler: class.Camera]
+
+Camera={}
+Camera.mt={}
+Camera.mti={}
+
+function Camera.mt.__call(self,pos,rot,dir)
+
+    local s={
+        pos=pos,
+        rot=rot,
+        dir=dir,
+    }
+
+    function s:rotate(r)
+        self.rot=self.rot+r
+        self.dir:rotate(r.x,r.y,r.z)
+    end
+
+    function s:updateClippingPlanes()
+
+        self.clippingPlanes = {}
+
+        self.clippingPlanes.near = {
+            origin=self.pos,
+            normal=self.dir:copy(),
+        }
+
+        self.clippingPlanes.left = {
+            origin=self.pos,
+            normal=self.dir:copy(),
+        }
+        self.clippingPlanes.left.normal:rotateAboutAxis(self.verticalVector,-(viewport.fov/2)+(math.pi/2))
+
+        self.clippingPlanes.right = {
+            origin=self.pos,
+            normal=self.dir:copy(),
+        }
+        self.clippingPlanes.right.normal:rotateAboutAxis(self.verticalVector,(viewport.fov/2)-(math.pi/2))
+
+        self.clippingPlanes.top = {
+            origin=self.pos,
+            normal=self.dir:copy(),
+        }
+        self.clippingPlanes.top.normal:rotateAboutAxis(self.horizontalVector,(viewport._vfov/2)-(math.pi/2))
+
+        self.clippingPlanes.bottom = {
+            origin=self.pos,
+            normal=self.dir:copy(),
+        }
+        self.clippingPlanes.bottom.normal:rotateAboutAxis(self.horizontalVector,-(viewport._vfov/2)+(math.pi/2))
+
+    end
+
+    function s:updateVectors()
+        local horizontalVector,verticalVector = self.dir:copy(),self.dir:copy()
+        horizontalVector:rotate(0,-math.pi/2,0) -- points right (will need to fixed if cam points up or down)
+        verticalVector:rotateAboutAxis(horizontalVector,math.pi/2) -- points up
+        self.horizontalVector,self.verticalVector = horizontalVector,verticalVector
+    end
+
+    function s:isPointInView(p,r)
+        if r==nil then r=0 end
+        local cameraPos = self.pos
+        local clippingPlanes = self.clippingPlanes
+        local isInView = true
+        local closestPlane = nil
+        local closestPlaneDistance = math.huge
+
+        local planeDistFromOrigin = -( clippingPlanes.near.normal:dot(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.near.normal:dot(p) + planeDistFromOrigin
+        isInView = true and signedDistanceToPlane >= -r
+        if not isInView and signedDistanceToPlane < closestPlaneDistance then
+            closestPlane = clippingPlanes.near
+            closestPlaneDistance = signedDistanceToPlane
+        end
+
+        local planeDistFromOrigin = -( clippingPlanes.left.normal:dot(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.left.normal:dot(p) + planeDistFromOrigin
+        isInView = true and signedDistanceToPlane >= -r
+        if not isInView and signedDistanceToPlane < closestPlaneDistance then
+            closestPlane = clippingPlanes.left
+            closestPlaneDistance = signedDistanceToPlane
+        end
+
+        local planeDistFromOrigin = -( clippingPlanes.right.normal:dot(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.right.normal:dot(p) + planeDistFromOrigin
+        isInView = true and signedDistanceToPlane >= -r
+        if not isInView and signedDistanceToPlane < closestPlaneDistance then
+            closestPlane = clippingPlanes.right
+            closestPlaneDistance = signedDistanceToPlane
+        end
+
+        local planeDistFromOrigin = -( clippingPlanes.top.normal:dot(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.top.normal:dot(p) + planeDistFromOrigin
+        isInView = true and signedDistanceToPlane >= -r
+        if not isInView and signedDistanceToPlane < closestPlaneDistance then
+            closestPlane = clippingPlanes.top
+            closestPlaneDistance = signedDistanceToPlane
+        end
+
+        local planeDistFromOrigin = -( clippingPlanes.bottom.normal:dot(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.bottom.normal:dot(p) + planeDistFromOrigin
+        isInView = true and signedDistanceToPlane >= -r
+        if not isInView and signedDistanceToPlane < closestPlaneDistance then
+            closestPlane = clippingPlanes.bottom
+            closestPlaneDistance = signedDistanceToPlane
+        end
+
+        return isInView,closestPlane
+    end
+
+    setmetatable(s,Camera.mti)
+
+    s:rotate(s.rot)
+
+    return s
+
+end
+
+setmetatable(Camera,Camera.mt)
+
+-- [/TQ-Bundler: class.Camera]
+
 -- [TQ-Bundler: class.Pos3D]
 
 Pos3D={}
@@ -191,31 +325,91 @@ Pos3D.mti={}
 function Pos3D.mt.__call(self,x,y,z,w)
 	local s={x=x,y=y,z=z,w=1}
 	if w~=nil then s.w=w end
+	s.matrix=Matrix(4,1)
+	s.matrix.values={{s.x},{s.y},{s.z},{s.w}}
+
+	function s:updateMatrix()
+		self.matrix.values={{self.x},{self.y},{self.z},{self.w}}
+	end
+
+	function s:copy()
+		return Pos3D(self.x,self.y,self.z,self.w)
+	end
 
 	function s:dot(p2)
 		return (self.x*p2.x)+(self.y*p2.y)+(self.z*p2.z)+(self.w*p2.w)
 	end
 
 	function s:scale(sx,sy,sz)
-		local m=Matrix.fromVector(self)
+		local m=self.matrix
 		m:applyScaleFactor(sx,sy,sz)
-		self.x,self.y,self.z,self.w = table.unpack(m[1])
+		self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
+		self:updateMatrix()
 	end
 
 	function s:translate(tx,ty,tz)
-		local m=Matrix.fromVector(self)
+		local m=self.matrix
 		m:applyTranslation(tx,ty,tz)
-		self.x,self.y,self.z,self.w = table.unpack(m[1])
+		self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
+		self:updateMatrix()
 	end
 
 	function s:rotateAboutAxis(dir,angle)
-		local m=Matrix.fromVector(self)
+		local m=self.matrix
 		m:applyAxisAngleRotation(dir,angle)
-		self.x,self.y,self.z,self.w = table.unpack(m[1])
+		self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
+		self:updateMatrix()
+	end
+
+	function s:cross(v)
+		local x = ( self.y * v.z ) - ( v.y * self.z )
+		local y = ( self.z * v.x ) - ( v.z * self.x )
+		local z = ( self.x * v.y ) - ( v.x * self.y )
+		return Pos3D(x,y,z,self.w)
+	end
+
+	function s:toLocalTransform(origin,rot,scale)
+
+		local vertexPos = self:copy()
+
+		-- scale
+		vertexPos:scale(scale,scale,scale)
+
+		-- translate/rotate about the origin
+		vertexPos:rotateAboutAxis(Dir3D(1,0,0),rot.x)
+		vertexPos:rotateAboutAxis(Dir3D(0,1,0),rot.y)
+		vertexPos:rotateAboutAxis(Dir3D(0,0,1),rot.z)
+		vertexPos:translate(origin.x,origin.y,origin.z)
+
+		return vertexPos
+
+	end
+	
+	function s:magnitude()
+		if s.w == 0 then
+			return math.sqrt(self:dot(self))
+		end
+		return math.sqrt(math.abs(self:dot(self)-1))
+	end
+
+	function s:toCameraTransform()
+
+		local vertexPos = self:copy()
+
+		-- translate/rotate about the camera
+		vertexPos:translate(-camera.pos.x,-camera.pos.y,-camera.pos.z)
+		vertexPos:rotateAboutAxis(Dir3D(1,0,0),-camera.rot.x)
+		vertexPos:rotateAboutAxis(Dir3D(0,1,0),math.pi-camera.rot.y)
+		vertexPos:rotateAboutAxis(Dir3D(0,0,1),-camera.rot.z)
+
+		return vertexPos
+
 	end
 
 	function s:canonical()
-		return Pos3D(self.x/self.w,self.y/self.w,self.z/self.w,1)
+		local div = 1
+		if self.w ~= 0 then div=self.w end
+		return Pos3D(self.x/div,self.y/div,self.z/div,1)
 	end
 
 	setmetatable(s,Pos3D.mti)
@@ -223,7 +417,7 @@ function Pos3D.mt.__call(self,x,y,z,w)
 end
 
 function Pos3D.fromMatrix(m)
-	if m.rows~=1 or m.cols~=3 then return end
+	if m.rows>4 or m.cols>4 then return end
 	return Pos3D(m[1][1],m[1][2],m[1][3],m[1][4])
 end
 
@@ -245,6 +439,14 @@ function Pos3D.mti.__mul(self,v)
 	end
 end
 
+function Pos3D.mti.__div(self,v)
+	if type(v) == "number" then
+		return Pos3D(self.x/v,self.y/v,self.z/v,self.w/v)
+	elseif type(v) == "table" then
+		return Pos3D(self.x/v.x,self.y/v.y,self.z/v.z,self.w/v.w)
+	end
+end
+
 setmetatable(Pos3D,Pos3D.mt)
 
 -- [/TQ-Bundler: class.Pos3D]
@@ -259,6 +461,16 @@ function Pos2D.mt.__call(self,x,y)
 	local s={x=x,y=y}
 	setmetatable(s,Pos2D.mti)
 	return s
+end
+
+function Pos2D.fromMatrix(m)
+	local rows = #m
+	local p = Pos2D(m[1][1],m[2][1])
+	if rows > 2 then
+		p.x = p.x/m[3][1]
+		p.y = p.y/m[3][1]
+	end
+	return p
 end
 
 setmetatable(Pos2D,Pos2D.mt)
@@ -330,25 +542,54 @@ Dir3D.mti={}
 function Dir3D.mt.__call(self,x,y,z,w)
 	local s={x=x,y=y,z=z,w=0}
 	if w~=nil then s.w=w end
+	s.matrix=Matrix(4,1)
+	s.matrix.values={{s.x},{s.y},{s.z},{s.w}}
+
+	function s:copy()
+		return Dir3D(self.x,self.y,self.z,self.w)
+	end
+
+	function s:updateMatrix()
+		self.matrix.values={{self.x},{self.y},{self.z},{self.w}}
+	end
 
 	function s:dot(p2)
 		return (self.x*p2.x)+(self.y*p2.y)+(self.z*p2.z)
 	end
 
+	function s:cross(v)
+		local x = ( self.y * v.z ) - ( v.y * self.z )
+		local y = ( self.z * v.x ) - ( v.z * self.x )
+		local z = ( self.x * v.y ) - ( v.x * self.y )
+		return Dir3D(x,y,z,self.w)
+	end
+
 	function s:rotate(x,y,z)
-		local m=Matrix.fromVector(self)
+		local m=self.matrix
 		m:applyRotation(x,y,z)
-		self.x,self.y,self.z,self.w = table.unpack(m[1])
+		self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
+		self:updateMatrix()
 	end
 
 	function s:rotateAboutAxis(dir,angle)
-		local m=Matrix.fromVector(self)
+		local m=self.matrix
 		m:applyAxisAngleRotation(dir,angle)
-		self.x,self.y,self.z,self.w = table.unpack(m[1])
+		self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
+		self:updateMatrix()
 	end
 
 	function s:canonical()
-		return Dir3D(self.x/self.w,self.y/self.w,self.z/self.w,0)
+		local div=self.w
+		if self.w == 0 then div = 1 end
+		return Dir3D(self.x/div,self.y/div,self.z/div,0)
+	end
+
+	function s:magnitude()
+		local v = self:canonical()
+		if v.w == 0 then
+			return math.sqrt(math.abs(v:dot(v)))
+		end
+		return math.sqrt(math.abs(v:dot(v))-1)
 	end
 
 	setmetatable(s,Dir3D.mti)
@@ -378,7 +619,7 @@ function Dir3D.mti.__unm(self)
 end
 
 function Dir3D.fromMatrix(m)
-	if m.rows~=1 or m.cols~=3 then return end
+	if m.rows>4 or m.cols>4 then return end
 	return Dir3D(m[1][1],m[1][2],m[1][3],m[1][4])
 end
 
@@ -459,7 +700,7 @@ function Matrix.mt.__call(self,rows,cols,fill)
 			{ 0, 0, 0, 1}
 		}
 
-		self.values = (self*(rx*ry*rz)).values
+		self.values = ((rx*ry*rz)*self).values
 	end
 
 	function s:applyAxisAngleRotation(dir,angle)
@@ -476,7 +717,7 @@ function Matrix.mt.__call(self,rows,cols,fill)
 			{ z*x*C-y*s, z*y*C+x*s, z*z*C+c,   0 },
 			{ 0,         0,         0,         1 }
 		}
-		self.values = (self*Q).values
+		self.values = (Q*self).values
 	end
 
 	function s:applyScaleFactor(sx,sy,sz)
@@ -487,7 +728,7 @@ function Matrix.mt.__call(self,rows,cols,fill)
 			{ 0, 0, sz, 0 },
 			{ 0, 0, 0, 1 }
 		}
-		self.values = (self*Q).values
+		self.values = (Q*self).values
 	end
 
 	function s:applyTranslation(tx,ty,tz)
@@ -498,7 +739,7 @@ function Matrix.mt.__call(self,rows,cols,fill)
 			{ 0, 0, 1, tz },
 			{ 0, 0, 0, 1 }
 		}
-		self.values = (self*Q).values
+		self.values = (Q*self).values
 	end
 
 	for row=1,rows do
@@ -511,9 +752,14 @@ function Matrix.mt.__call(self,rows,cols,fill)
 	return s
 end
 
-function Matrix.fromVector(v)
-	local m=Matrix(1,4)
-	m.values={{v.x,v.y,v.z,v.w}}
+function Matrix.fromVector(v,d)
+	if d then
+		m=Matrix(4,1)
+		m.values={{v.x},{v.y},{v.z},{v.w}}
+	else
+		m=Matrix(1,4)
+		m.values={{v.x,v.y,v.z,v.w}}
+	end
 	return m
 end
 
@@ -617,38 +863,94 @@ function Object3D._inits.mesh(meshID,pos,rot,dir,scale)
 end
 
 function Object3D._renderRoutines.mesh(self)
+
     local mesh = scene.loadedObjects[self.meshID]
     self.origin = self.pos
 
-    for i,triangle in pairs(mesh.triangles) do
-        data={}
-        for _,vertex in ipairs(triangle) do
-            self.origin = self.pos
-            local vertexPos = Pos3D(table.unpack(vertex))
+    for triangleIndex,triangle in ipairs(mesh.triangles) do
 
-            -- scale mesh
-            local vModelScaled = vertexPos*self.scale
+        local triangleCenter = triangle.center:toLocalTransform(self.origin,self.rot,self.scale)
+        local triangleBoundingSphereRadius = distBetween3DPoints( triangleCenter, triangle.vertices[1]:toLocalTransform(self.origin,self.rot,self.scale) )
+        local clippedPoints = {}
+        local clippedPointsPlanes = {}
+        local unclippedPoints = {}
+        local resultantTriangles = {}
 
-            -- translate/rotate mesh about its origin
-            local vModelRotated = vModelScaled
-            vModelRotated:rotateAboutAxis(Dir3D(1,0,0),self.rot.x)
-            vModelRotated:rotateAboutAxis(Dir3D(0,1,0),self.rot.y)
-            vModelRotated:rotateAboutAxis(Dir3D(0,0,1),self.rot.z)
-            vWorld = vModelRotated+self.origin
+        if camera:isPointInView(triangleCenter,triangleBoundingSphereRadius) then
 
-            -- translate/rotate mesh about the camera
-            local vTranslated = vWorld-camera.pos
-            vTranslated:rotateAboutAxis(Dir3D(1,0,0),-camera.rot.x)
-            vTranslated:rotateAboutAxis(Dir3D(0,1,0),math.pi-camera.rot.y)
-            vTranslated:rotateAboutAxis(Dir3D(0,0,1),-camera.rot.z)
+            -- sort vertices depending on whether they're visible to the camera
+            for vertexIndex=1,3 do
 
-            local screenPos=worldSpaceToScreenSpace(vTranslated)
+                local vertex = triangle.vertices[vertexIndex]:copy()
+                local vertexLocalTransformPos = vertex:toLocalTransform(self.origin,self.rot,self.scale)
 
-            table.insert(data,screenPos.x)
-            table.insert(data,screenPos.y)
+                local pointInView,plane = camera:isPointInView(vertexLocalTransformPos)
+                if pointInView then
+                    table.insert(unclippedPoints,vertexLocalTransformPos)
+                else
+                    table.insert(clippedPoints,vertexLocalTransformPos)
+                    table.insert(clippedPointsPlanes,plane)
+                end
+
+            end
+
+            if #clippedPoints == 0 then
+                resultantTriangles[1] = {}
+                for _,vertex in pairs(unclippedPoints) do
+                    local screenPos = worldSpaceToScreenSpace(vertex:toCameraTransform())
+                    table.insert(resultantTriangles[1],screenPos.x)
+                    table.insert(resultantTriangles[1],screenPos.y)
+                end
+            elseif #clippedPoints == 1 then
+                local tri1,tri2={},{}
+                tri1.p1 = unclippedPoints[1]
+                tri1.p2 = unclippedPoints[2]
+                tri1.p3 = getVectorPlaneIntersection( tri1.p1, dirBetween3DPoints(tri1.p1,clippedPoints[1]), clippedPointsPlanes[1])
+                tri2.p1 = tri1.p3
+                tri2.p2 = unclippedPoints[2]
+                tri2.p3 = getVectorPlaneIntersection( tri2.p2, dirBetween3DPoints(tri2.p2,clippedPoints[1]), clippedPointsPlanes[1])
+                local triangles = {tri1,tri2}
+
+                if tri1.p3 ~= nil and tri2.p3 ~= nil then
+                    resultantTriangles[1],resultantTriangles[2]={},{}
+                    for resultantTriangleIndex,triangle in ipairs(triangles) do
+                        for _,vertex in pairs(triangle) do
+                            local screenPos = worldSpaceToScreenSpace(vertex:toCameraTransform())
+                            table.insert(resultantTriangles[resultantTriangleIndex],screenPos.x)
+                            table.insert(resultantTriangles[resultantTriangleIndex],screenPos.y)
+                        end
+                    end
+                end
+            elseif #clippedPoints == 2 then
+                local p1 = unclippedPoints[1]
+                local p2 = getVectorPlaneIntersection( p1, dirBetween3DPoints(p1,clippedPoints[1]), clippedPointsPlanes[1]) -- currently supports 1 clipped plane
+                local p3 = getVectorPlaneIntersection( p1, dirBetween3DPoints(p1,clippedPoints[2]), clippedPointsPlanes[2])
+
+                local triangle = {p1,p2,p3}
+
+                if p2 ~= nil and p3 ~= nil then
+
+                    resultantTriangles[1] = {}
+                    for _,vertex in pairs(triangle) do
+                        local screenPos = worldSpaceToScreenSpace(vertex:toCameraTransform())
+                        table.insert(resultantTriangles[1],screenPos.x)
+                        table.insert(resultantTriangles[1],screenPos.y)
+                    end
+
+                end
+            end
+            if triangleIndex==1 and #clippedPoints > 0 then
+                trace(#clippedPoints..","..#clippedPointsPlanes[1])
+            end
+            for j=1,#resultantTriangles do
+                if triangleIndex==1 then
+                --table.insert(resultantTriangles[j],(triangleIndex%11)+1)
+                table.insert(resultantTriangles[j],12)
+                trib(table.unpack(resultantTriangles[j]))
+                end
+            end
+
         end
-        table.insert(data,(i%11)+1)
-        tri(table.unpack(data))
     end
 end
 
@@ -663,23 +965,17 @@ MAP_SIZE_BYTES=32640
 
 -- SCENE COMPONENTS --
 
-camera={
-	pos=Pos3D(0,0,0),
-	rot=Rot3D(0,0,0),
-	dir=Dir3D(0,0,1),
-}
-function camera:rotate(x,y,z)
-	self.rot=self.rot+Rot3D(x,y,z)
-	self.dir = Dir3D(0,0,1)
-	self.dir:rotate(self.rot.x,self.rot.y,self.rot.z)
-end
-camera.dir:rotate(camera.rot.x,camera.rot.y,camera.rot.z)
+camera=Camera( Pos3D(0,0,0), Rot3D(0,0,0), Dir3D(0,0,1) )
 
 viewport={
 	size=Size2D(SCREEN_WIDTH,SCREEN_HEIGHT),
-	focalDist=100,
-	points={}
+	fov=90,
 }
+function viewport:updateFocalDist()
+	self._focalDist = self.size.w / ( 2*math.tan(self.fov/2) )
+	self._vfov = 2 * math.atan( self.size.h, (2*self._focalDist) ) -- in radians
+end
+viewport:updateFocalDist()
 
 light={
 	pos=Pos3D(-5,6,5)
@@ -702,8 +998,8 @@ scene={
 
 function worldSpaceToViewportSpace(pos)
 	local x,y,z = pos.x,pos.y,pos.z
-	local vpX = (x*viewport.focalDist)/z
-	local vpY = (y*viewport.focalDist)/z
+	local vpX = (x*viewport._focalDist)/z
+	local vpY = (y*viewport._focalDist)/z
 	return Pos2D(vpX+viewport.size.w/2,vpY+viewport.size.h/2)
 end
 
@@ -723,10 +1019,10 @@ end
 function calculateMeshOrigin(mesh)
 	local xAvg,yAvg,zAvg=0,0,0
 	for _,triangle in pairs(mesh.triangles) do
-		for _,vertex in pairs(triangle) do
-			xAvg=xAvg+vertex[1]
-			yAvg=yAvg+vertex[2]
-			zAvg=zAvg+vertex[3]
+		for _,vertex in pairs(triangle.vertices) do
+			xAvg=xAvg+vertex.x
+			yAvg=yAvg+vertex.y
+			zAvg=zAvg+vertex.z
 		end
 	end
 	xAvg=xAvg/mesh.numberOfTriangles
@@ -747,16 +1043,6 @@ function getMeshRelativeToOrigin(mesh,origin)
 	return newmesh
 end
 
--- function updateViewportVectors()
--- 	viewport.center = translate3D(camera.pos,camera.rot,viewport.focalDist)
--- 	viewport.horizontalVector = Rot3D(camera.rot.x,camera.rot.y,camera.rot.z)
--- 	viewport.verticalVector = Rot3D(camera.rot.x,camera.rot.y,camera.rot.z)
--- 	viewport.horizontalVector:rotate(0,-math.pi/2,0)
--- 	viewport.verticalVector:rotateAboutAxis(viewport.horizontalVector,math.pi/2)
--- 	viewport.base = translate3D(viewport.center,viewport.horizontalVector,-viewport.size.w/2)
--- 	viewport.base = translate3D(viewport.base,viewport.verticalVector,viewport.size.h/2)
--- end
-
 function translate3D(pos,dir,dist)
 	local newX = pos.x+(dir.x*dist)
 	local newY = pos.y+(dir.y*dist)
@@ -775,6 +1061,46 @@ function dirBetween3DPoints(p1,p2)
 	local dy = p2.y-p1.y
 	local dz = p2.z-p1.z
 	return Dir3D(round(dx/dist,4),round(dy/dist,4),round(dz/dist,4))
+end
+
+function getSurfaceNormal(p1,p2,p3)
+	local a = p2 - p1
+	local b = p3 - p1
+	local nX = a.y * b.z - a.z * b.y
+	local nY = a.z * b.x - a.x * b.z
+	local nZ = a.x * b.y - a.y * b.x
+	return Dir3D(nX,nY,nZ)
+end
+
+function getTriangleCircumcenter(pA,pB,pC)
+	local faceNormal = getSurfaceNormal(pA,pB,pC)
+
+	local abMidpoint = (pA+pB)/2
+	local abPerpDir = dirBetween3DPoints(pA,pB)
+	abPerpDir:rotateAboutAxis(faceNormal,math.pi/2)
+
+	local bcMidpoint = (pB+pC)/2
+	local bcPerpDir = dirBetween3DPoints(pB,pC)
+	bcPerpDir:rotateAboutAxis(faceNormal,math.pi/2)
+
+	-- L1 = abMidpoint + a * abPerpDir
+	-- L2 = bcMidpoint + b * bcPerpDir
+	-- abMidpoint + a * abPerpDir = bcMidpoint + b * bcPerpDir
+	-- a * abPerpDir = ( bcMidpoint - abMidpoint ) + b * bcPerpDir
+	-- a * ( abPerpDir * bcPerpDir ) = ( bcMidpoint - abMidpoint ) * bcPerpDir
+
+	local a = 0
+	local lastDifference = math.huge
+	while a < 5 do
+		local left = ( abPerpDir:cross(bcPerpDir) ) * a
+		local right = ( bcMidpoint - abMidpoint ):cross(bcPerpDir)
+		local difference = (left-right):magnitude()
+		if difference > lastDifference then break end
+		lastDifference = difference
+		a=a+0.01
+	end
+
+	return translate3D(abMidpoint,abPerpDir,a)
 end
 
 function updateMouseInfo()
@@ -804,6 +1130,8 @@ function TIC()
 	updateMouseInfo()
 
 	if t==0 then
+		camera:updateVectors()
+		camera:updateClippingPlanes()
 		loadObjects()
 		cube=Object3D("mesh","cube",Pos3D(0,0,5),Rot3D(0,0,0),Dir3D(0,0,1),0.5)
 	end
@@ -812,22 +1140,24 @@ function TIC()
 
 	if btn(0) then camera.pos=translate3D(camera.pos,camera.dir,0.1) end --forward
 	if btn(1) then camera.pos=translate3D(camera.pos,camera.dir,-0.1) end --backward
-	if btn(2) then camera:rotate(0,math.pi/32,0) end--right
-	if btn(3) then camera:rotate(0,-math.pi/32,0) end --left
+	if btn(2) then camera:rotate( Rot3D(0,-math.pi/32,0) ) end --right
+	if btn(3) then camera:rotate( Rot3D(0,math.pi/32,0) ) end --left
+
+	camera:updateVectors()
+	camera:updateClippingPlanes()
 
 	if gmouse.down then
 		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)
-		camera:rotate(0,-(2*math.pi)*(physicalSpace/viewport.size.w),0)
+		camera:rotate( Rot3D(0,2*math.pi*(physicalSpace/viewport.size.w),0) )
 	end
 
-	scene.get(cube).rot:rotate(0,math.pi/64,0)
+	--scene.get(cube).rot:rotate(0,math.pi/64,0)
 
 	-- light.pos.x=10*math.sin(t/100)
 	-- light.pos.z=10*math.cos(t/100)+15
 	-- light.pos.y=3*math.sin(t/180)
 
 	renderScreen()
-		
 	t=t+1
 end
 -- <MAP>

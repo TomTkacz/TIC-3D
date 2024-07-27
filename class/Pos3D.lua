@@ -64,7 +64,7 @@ function Pos3D.mt.__call(self,x,y,z,w)
 		return vertexPos
 
 	end
-
+	
 	function s:magnitude()
 		if s.w == 0 then
 			return math.sqrt(self:dot(self))
@@ -74,7 +74,7 @@ function Pos3D.mt.__call(self,x,y,z,w)
 
 	function s:toCameraTransform()
 
-		local vertexPos = self:canonical()
+		local vertexPos = self:copy()
 
 		-- translate/rotate about the camera
 		vertexPos:translate(-camera.pos.x,-camera.pos.y,-camera.pos.z)

@@ -52,6 +52,12 @@ function copyTable(obj, seen)
     return res
 end
 
+function getVectorPlaneIntersection(pos,dir,plane)
+    if plane.normal:dot(dir) == 0 then return end
+    local t = ( plane.normal:dot(plane.origin) - plane.normal:dot(pos) ) / plane.normal:dot(dir)
+    return pos + ( dir * t )
+end
+
 function inRads(v)
     return v%(2*math.pi)
 end
