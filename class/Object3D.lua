@@ -64,7 +64,16 @@ function Object3D._renderRoutines.mesh(self)
             if pointInView then
                 table.insert(unclippedVertices,vertexLocalTransformPos)
             else
-                table.insert(clippedVertexPlanePairs,{vertex=vertexLocalTransformPos,plane=planes[1]})
+                local clipsNearPlane = false
+                local planeIndex = 2
+                for i,plane in ipairs(planes) do
+                    if plane == "near" then
+                        clipsNearPlane = true
+                        break
+                    end
+                    planeIndex = i
+                end
+                table.insert(clippedVertexPlanePairs,{vertex=vertexLocalTransformPos,plane=planes[planeIndex],clipsNearPlane=clipsNearPlane})
             end
 
         end
@@ -74,6 +83,20 @@ function Object3D._renderRoutines.mesh(self)
     end
 
     local function getResultantTriangles(clippedVertexPlanePairs,unclippedVertices)
+
+        -- if #clippedVertexPlanePairs ~= 0 then
+        --     local clippingNear = false
+        --     for _,v in pairs(clippedVertexPlanePairs) do
+        --         if v.clipsNearPlane then
+        --             clippingNear = true
+        --             break
+        --         end
+        --     end
+        --     if clippingNear then
+        --         trace("---")
+        --         trace("clips near!")
+        --     end
+        -- end
 
         local result = {}
 
@@ -119,8 +142,20 @@ function Object3D._renderRoutines.mesh(self)
             local t={vertices={}}
 
             t.vertices[1] = unclippedVertices[1]
-            t.vertices[2] = getVectorPlaneIntersection( t.vertices[1], dirBetween3DPoints(t.vertices[1],clippedVertexPlanePairs[1].vertex), camera.clippingPlanes[clippedVertexPlanePairs[1].plane])
-            t.vertices[3] = getVectorPlaneIntersection( t.vertices[1], dirBetween3DPoints(t.vertices[1],clippedVertexPlanePairs[2].vertex), camera.clippingPlanes[clippedVertexPlanePairs[2].plane])
+            t.vertices[2] = getVectorPlaneIntersection( t.vertices[1], dirBetween3DPoints(t.vertices[1],clippedVertexPlanePairs[1].vertex), camera.clippingPlanes[clippedVertexPlanePairs[1].plane] )
+            t.vertices[3] = getVectorPlaneIntersection( t.vertices[1], dirBetween3DPoints(t.vertices[1],clippedVertexPlanePairs[2].vertex), camera.clippingPlanes[clippedVertexPlanePairs[2].plane] )
+
+            if clippedVertexPlanePairs[1].plane ~= clippedVertexPlanePairs[2].plane then
+                local t1,t2 = {vertices={}},{vertices={}}
+                t1.vertices[1] = getVectorPlaneIntersection( clippedVertexPlanePairs[1].vertex, dirBetween3DPoints(clippedVertexPlanePairs[1].vertex,clippedVertexPlanePairs[2].vertex), camera.clippingPlanes[clippedVertexPlanePairs[1].plane] )
+                t1.vertices[2] = getVectorPlaneIntersection( clippedVertexPlanePairs[2].vertex, dirBetween3DPoints(clippedVertexPlanePairs[2].vertex,clippedVertexPlanePairs[1].vertex), camera.clippingPlanes[clippedVertexPlanePairs[2].plane] )
+                t1.vertices[3] = t.vertices[2]
+                t2.vertices[1] = t1.vertices[2]
+                t2.vertices[2] = t.vertices[2]
+                t2.vertices[3] = t.vertices[3]
+                table.insert(result,t1)
+                table.insert(result,t2)
+            end
 
             local tClipped,tUnclipped = sortTriangleVerticesByPlaneClipping(t)
             local tAbsolute = {}
@@ -131,6 +166,44 @@ function Object3D._renderRoutines.mesh(self)
                 end
             else
                 table.insert(result,t)
+            end
+
+        elseif #clippedVertexPlanePairs == 3 then
+            
+            local p1,p2,p3 = clippedVertexPlanePairs[1].vertex,clippedVertexPlanePairs[2].vertex,clippedVertexPlanePairs[3].vertex
+            local plane1,plane2,plane3 = clippedVertexPlanePairs[1].plane,clippedVertexPlanePairs[2].plane,clippedVertexPlanePairs[3].plane
+            if plane1 ~= plane2 or plane2 ~= plane3 then
+                if plane1 == plane2 then
+                    -- local t1,t2 = {vertices={}},{vertices={}}
+                    -- t1.vertices[1] = getVectorPlaneIntersection( p1, dirBetween3DPoints(p1,p3), camera.clippingPlanes[plane1] )
+                    -- t1.vertices[2] = getVectorPlaneIntersection( p2, dirBetween3DPoints(p2,p3), camera.clippingPlanes[plane1] )
+                    -- t1.vertices[3] = getVectorPlaneIntersection( p2, dirBetween3DPoints(p2,p3), camera.clippingPlanes[plane3] )
+                    -- t2.vertices[1] = t1.vertices[1]
+                    -- t2.vertices[2] = t1.vertices[3]
+                    -- t2.vertices[3] = getVectorPlaneIntersection( p1, dirBetween3DPoints(p1,p3), camera.clippingPlanes[plane3] )
+                    -- table.insert(result,t1)
+                    -- table.insert(result,t2)
+                elseif plane2 == plane3 then
+                    -- TODO
+                else
+                    -- local t1,t2,t3,t4 = {vertices={}},{vertices={}},{vertices={}},{vertices={}}
+                    -- t1.vertices[1] = getVectorPlaneIntersection( p1, dirBetween3DPoints(p1,p2), camera.clippingPlanes[plane1] )
+                    -- t1.vertices[2] = getVectorPlaneIntersection( p1, dirBetween3DPoints(p1,p2), camera.clippingPlanes[plane2] )
+                    -- t1.vertices[3] = getVectorPlaneIntersection( p1, dirBetween3DPoints(p1,p3), camera.clippingPlanes[plane1] ) --
+                    -- t2.vertices[1] = t1.vertices[2]
+                    -- t2.vertices[2] = t1.vertices[3] --
+                    -- t2.vertices[3] = getVectorPlaneIntersection( p1, dirBetween3DPoints(p1,p3), camera.clippingPlanes[plane3] ) --
+                    -- t3.vertices[1] = t1.vertices[2]
+                    -- t3.vertices[2] = t2.vertices[3] --
+                    -- t3.vertices[3] = getVectorPlaneIntersection( p2, dirBetween3DPoints(p2,p3), camera.clippingPlanes[plane2] )
+                    -- t4.vertices[1] = t3.vertices[3]
+                    -- t4.vertices[2] = t2.vertices[3] --
+                    -- t4.vertices[3] = getVectorPlaneIntersection( p2, dirBetween3DPoints(p2,p3), camera.clippingPlanes[plane3] )
+                    -- table.insert(result,t1)
+                    -- table.insert(result,t2)
+                    -- table.insert(result,t3)
+                    -- table.insert(result,t4)
+                end
             end
 
         end
@@ -146,20 +219,24 @@ function Object3D._renderRoutines.mesh(self)
 
         if camera:isPointInView(triangleCenter,triangleBoundingSphereRadius) then
 
-            local resultantTriangles = getResultantTriangles( sortTriangleVerticesByPlaneClipping(triangle,self.origin,self.rot,self.scale) )
+            local resultantTriangles = {}
+            if triangleIndex == 12 then
+                resultantTriangles = getResultantTriangles( sortTriangleVerticesByPlaneClipping(triangle,self.origin,self.rot,self.scale) )
+            end
 
             for _,t in pairs(resultantTriangles) do
                 local triangleScreenValues = {}
-                --if triangleIndex==1 then
-                    for _,vertex in pairs(t.vertices) do
-                        local screenPos = worldSpaceToScreenSpace(vertex:toCameraTransform())
-                        table.insert(triangleScreenValues,screenPos.x)
-                        table.insert(triangleScreenValues,screenPos.y)
-                    end
+                for _,vertex in pairs(t.vertices) do
+                    local screenPos = worldSpaceToScreenSpace(vertex:toCameraTransform())
+                    table.insert(triangleScreenValues,screenPos.x)
+                    table.insert(triangleScreenValues,screenPos.y)
+                end
 
-                    table.insert(triangleScreenValues,1+(12%triangleIndex))
-                    tri(table.unpack(triangleScreenValues))
-                --end
+                table.insert(triangleScreenValues,1+(triangleIndex%7))
+                tri(table.unpack(triangleScreenValues))
+                triangleScreenValues[7] = 12
+                trib(table.unpack(triangleScreenValues))
+
             end
 
         end

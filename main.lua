@@ -33,7 +33,7 @@ viewport={
 	fov=90,
 }
 function viewport:updateFocalDist()
-	self._focalDist = self.size.w / ( 2*math.tan(self.fov/2) )
+	self._focalDist = self.size.w / ( 2*math.tan(math.rad(self.fov)/2) )
 	self._vfov = 2 * math.atan( self.size.h, (2*self._focalDist) ) -- in radians
 end
 viewport:updateFocalDist()
@@ -43,7 +43,7 @@ light={
 }
 
 gmouse={
-	sensitivity=30,
+	sensitivity=70,
 }
 
 scene={
@@ -194,15 +194,17 @@ function TIC()
 		camera:updateVectors()
 		camera:updateClippingPlanes()
 		loadObjects()
-		cube=Object3D("mesh","cube",Pos3D(0,0,5),Rot3D(0,0,0),Dir3D(0,0,1),0.5)
+		cube=Object3D("mesh","cube",Pos3D(0,0,3),Rot3D(0,0,0),Dir3D(0,0,1),3)
 	end
 
 	cls(0)
 
 	if btn(0) then camera.pos=translate3D(camera.pos,camera.dir,0.1) end --forward
 	if btn(1) then camera.pos=translate3D(camera.pos,camera.dir,-0.1) end --backward
-	if btn(2) then camera:rotate( Rot3D(0,-math.pi/32,0) ) end --right
-	if btn(3) then camera:rotate( Rot3D(0,math.pi/32,0) ) end --left
+	if btn(2) then camera.pos=translate3D(camera.pos,camera.horizontalVector,0.1) end --right
+	if btn(3) then camera.pos=translate3D(camera.pos,camera.horizontalVector,-0.1) end --left
+
+	if btn(4) then scene.get(cube).pos = Pos3D(0,math.sin(t/20)*3,3) end
 
 	camera:updateVectors()
 	camera:updateClippingPlanes()
@@ -211,8 +213,6 @@ function TIC()
 		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)
 		camera:rotate( Rot3D(0,2*math.pi*(physicalSpace/viewport.size.w),0) )
 	end
-
-	--scene.get(cube).rot:rotate(0,math.pi/64,0)
 
 	-- light.pos.x=10*math.sin(t/100)
 	-- light.pos.z=10*math.cos(t/100)+15

@@ -67,8 +67,6 @@ function copyTable(obj, seen)
 end
 
 function getVectorPlaneIntersection(pos,dir,plane)
-    pos = pos:canonical()
-    dir = dir:canonical()
     if plane.normal:dot(dir) == 0 then return end
     local t = ( plane.normal:dot(plane.origin) - plane.normal:dot(pos) ) / plane.normal:dot(dir)
     return pos + ( dir * t )
@@ -258,50 +256,35 @@ function Camera.mt.__call(self,pos,rot,dir)
         local cameraPos = self.pos
         local clippingPlanes = self.clippingPlanes
         local isInView = true
-        local closestPlane = nil
-        local closestPlaneDistance = math.huge
+        local planesClipped = {}
+        local errorMargin = 0.005
 
         local planeDistFromOrigin = -( clippingPlanes.near.normal:dot(cameraPos) )
         local signedDistanceToPlane = clippingPlanes.near.normal:dot(p) + planeDistFromOrigin
-        isInView = true and signedDistanceToPlane >= -r
-        if not isInView and signedDistanceToPlane < closestPlaneDistance then
-            closestPlane = clippingPlanes.near
-            closestPlaneDistance = signedDistanceToPlane
-        end
+        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
+        if signedDistanceToPlane < -r - errorMargin then table.insert(planesClipped,"near") end
 
         local planeDistFromOrigin = -( clippingPlanes.left.normal:dot(cameraPos) )
         local signedDistanceToPlane = clippingPlanes.left.normal:dot(p) + planeDistFromOrigin
-        isInView = true and signedDistanceToPlane >= -r
-        if not isInView and signedDistanceToPlane < closestPlaneDistance then
-            closestPlane = clippingPlanes.left
-            closestPlaneDistance = signedDistanceToPlane
-        end
+        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
+        if signedDistanceToPlane < -r - errorMargin then table.insert(planesClipped,"left") end
 
         local planeDistFromOrigin = -( clippingPlanes.right.normal:dot(cameraPos) )
         local signedDistanceToPlane = clippingPlanes.right.normal:dot(p) + planeDistFromOrigin
-        isInView = true and signedDistanceToPlane >= -r
-        if not isInView and signedDistanceToPlane < closestPlaneDistance then
-            closestPlane = clippingPlanes.right
-            closestPlaneDistance = signedDistanceToPlane
-        end
+        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
+        if signedDistanceToPlane < -r - errorMargin then table.insert(planesClipped,"right") end
 
         local planeDistFromOrigin = -( clippingPlanes.top.normal:dot(cameraPos) )
         local signedDistanceToPlane = clippingPlanes.top.normal:dot(p) + planeDistFromOrigin
-        isInView = true and signedDistanceToPlane >= -r
-        if not isInView and signedDistanceToPlane < closestPlaneDistance then
-            closestPlane = clippingPlanes.top
-            closestPlaneDistance = signedDistanceToPlane
-        end
+        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
+        if signedDistanceToPlane < -r - errorMargin then table.insert(planesClipped,"top") end
 
         local planeDistFromOrigin = -( clippingPlanes.bottom.normal:dot(cameraPos) )
         local signedDistanceToPlane = clippingPlanes.bottom.normal:dot(p) + planeDistFromOrigin
-        isInView = true and signedDistanceToPlane >= -r
-        if not isInView and signedDistanceToPlane < closestPlaneDistance then
-            closestPlane = clippingPlanes.bottom
-            closestPlaneDistance = signedDistanceToPlane
-        end
+        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
+        if signedDistanceToPlane < -r - errorMargin then table.insert(planesClipped,"bottom") end
 
-        return isInView,closestPlane
+        return isInView,planesClipped
     end
 
     setmetatable(s,Camera.mti)
@@ -867,87 +850,164 @@ function Object3D._renderRoutines.mesh(self)
     local mesh = scene.loadedObjects[self.meshID]
     self.origin = self.pos
 
+    -- takes a triangle object (table with "vertices" key that contains 3 Pos3D objects) and returns two tables:
+    -- one containing tables with keys "vertex" and "plane" for storing the vertex outside of one or more viewing planes (Pos3D) and that plane
+    -- and another containing vertices inside all the viewing planes
+    local function sortTriangleVerticesByPlaneClipping(tri,origin,rot,scale)
+
+        local clippedVertexPlanePairs = {}
+        local unclippedVertices = {}
+        local transform = origin ~= nil
+
+        for vertexIndex=1,3 do
+
+            local vertex = tri.vertices[vertexIndex]:copy()
+            local vertexLocalTransformPos = vertex
+            if transform then vertexLocalTransformPos = vertex:toLocalTransform(origin,rot,scale) end
+            
+            local pointInView,planes = camera:isPointInView(vertexLocalTransformPos)
+            
+            if pointInView then
+                table.insert(unclippedVertices,vertexLocalTransformPos)
+            else
+                local clipsNearPlane = false
+                for _,plane in pairs(planes) do
+                    if plane == "near" then
+                        clipsNearPlane = true
+                        break
+                    end
+                end
+                table.insert(clippedVertexPlanePairs,{vertex=vertexLocalTransformPos,plane=planes[1],clipsNearPlane=clipsNearPlane})
+            end
+
+        end
+
+        return clippedVertexPlanePairs,unclippedVertices
+
+    end
+
+    local function getResultantTriangles(clippedVertexPlanePairs,unclippedVertices)
+
+        local result = {}
+
+        if #clippedVertexPlanePairs == 0 then
+
+            return { {vertices=unclippedVertices} }
+
+        elseif #clippedVertexPlanePairs == 1 then
+
+            local tri1,tri2={vertices={}},{vertices={}}
+
+            tri1.vertices[1] = unclippedVertices[1]
+            tri1.vertices[2] = unclippedVertices[2]
+            tri1.vertices[3] = getVectorPlaneIntersection( unclippedVertices[1], dirBetween3DPoints(unclippedVertices[1], clippedVertexPlanePairs[1].vertex), camera.clippingPlanes[clippedVertexPlanePairs[1].plane] )
+            tri2.vertices[1] = tri1.vertices[3]
+            tri2.vertices[2] = unclippedVertices[2]
+            tri2.vertices[3] = getVectorPlaneIntersection( unclippedVertices[2], dirBetween3DPoints(unclippedVertices[2], clippedVertexPlanePairs[1].vertex), camera.clippingPlanes[clippedVertexPlanePairs[1].plane] )
+            
+            local tri1Clipped,tri1Unclipped = sortTriangleVerticesByPlaneClipping(tri1)
+            local tri1Absolute = {}
+            if #tri1Clipped > 0 then
+                tri1Absolute = getResultantTriangles(tri1Clipped,tri1Unclipped)
+                for _,v in pairs(tri1Absolute) do
+                    table.insert(result,v)
+                end
+            else
+                table.insert(result,tri1)
+            end
+
+            local tri2Clipped,tri2Unclipped = sortTriangleVerticesByPlaneClipping(tri2)
+            local tri2Absolute = {}
+            if #tri2Clipped > 0 then
+                tri2Absolute = getResultantTriangles(tri2Clipped,tri2Unclipped)
+                for _,v in pairs(tri2Absolute) do
+                    table.insert(result,v)
+                end
+            else
+                table.insert(result,tri2)
+            end
+            
+        elseif #clippedVertexPlanePairs == 2 then
+
+            local t={vertices={}}
+
+            t.vertices[1] = unclippedVertices[1]
+            t.vertices[2] = getVectorPlaneIntersection( t.vertices[1], dirBetween3DPoints(t.vertices[1],clippedVertexPlanePairs[1].vertex), camera.clippingPlanes[clippedVertexPlanePairs[1].plane])
+            t.vertices[3] = getVectorPlaneIntersection( t.vertices[1], dirBetween3DPoints(t.vertices[1],clippedVertexPlanePairs[2].vertex), camera.clippingPlanes[clippedVertexPlanePairs[2].plane])
+
+            local tClipped,tUnclipped = sortTriangleVerticesByPlaneClipping(t)
+            local tAbsolute = {}
+            if #tClipped > 0 then
+                tAbsolute = getResultantTriangles(tClipped,tUnclipped)
+                for _,v in pairs(tAbsolute) do
+                    table.insert(result,v)
+                end
+            else
+                table.insert(result,t)
+            end
+
+        elseif #clippedVertexPlanePairs == 3 then
+            local triangleVisible = false
+            local subdivisions = 8
+            local pointA,pointB,pointC = clippedVertexPlanePairs[1].vertex,clippedVertexPlanePairs[2].vertex,clippedVertexPlanePairs[3].vertex
+            local dirBToC,distBToC = dirBetween3DPoints(pointB,pointC),distBetween3DPoints(pointB,pointC)
+
+            local offsetBC = 0
+            while offsetBC <= distBToC do
+                local scanPointBC = translate3D(pointB,dirBToC,offsetBC)
+                local dirScanPointBCToA,distScanPointBCToA = dirBetween3DPoints(pointA,scanPointBC),distBetween3DPoints(scanPointBC,pointA)
+                local offsetFromScanPointBC = 0
+                while offsetFromScanPointBC <= distScanPointBCToA do
+                    triangleVisible = camera:isPointInView( translate3D(pointA,dirScanPointBCToA,offsetFromScanPointBC) )
+                    if triangleVisible then break end
+                    offsetFromScanPointBC = offsetFromScanPointBC + distScanPointBCToA/subdivisions
+                end
+                if triangleVisible then break end
+                offsetBC = offsetBC + distBToC/subdivisions
+            end
+
+            if triangleVisible then
+                local clipped,unclipped = {},{}
+                for _,v in pairs(clippedVertexPlanePairs) do
+                    if v.clipsNearPlane then
+                        table.insert(clipped,{vertex=v.vertex,plane="near"})
+                    else
+                        table.insert(unclipped,v.vertex)
+                    end
+                end
+                result = getResultantTriangles(clipped,unclipped)
+            end
+
+        end
+
+        return result
+
+    end
+
     for triangleIndex,triangle in ipairs(mesh.triangles) do
 
         local triangleCenter = triangle.center:toLocalTransform(self.origin,self.rot,self.scale)
         local triangleBoundingSphereRadius = distBetween3DPoints( triangleCenter, triangle.vertices[1]:toLocalTransform(self.origin,self.rot,self.scale) )
-        local clippedPoints = {}
-        local clippedPointsPlanes = {}
-        local unclippedPoints = {}
-        local resultantTriangles = {}
 
         if camera:isPointInView(triangleCenter,triangleBoundingSphereRadius) then
 
-            -- sort vertices depending on whether they're visible to the camera
-            for vertexIndex=1,3 do
-
-                local vertex = triangle.vertices[vertexIndex]:copy()
-                local vertexLocalTransformPos = vertex:toLocalTransform(self.origin,self.rot,self.scale)
-
-                local pointInView,plane = camera:isPointInView(vertexLocalTransformPos)
-                if pointInView then
-                    table.insert(unclippedPoints,vertexLocalTransformPos)
-                else
-                    table.insert(clippedPoints,vertexLocalTransformPos)
-                    table.insert(clippedPointsPlanes,plane)
-                end
-
+            local resultantTriangles = {}
+            if triangleIndex == 1 then
+                resultantTriangles = getResultantTriangles( sortTriangleVerticesByPlaneClipping(triangle,self.origin,self.rot,self.scale) )
             end
 
-            if #clippedPoints == 0 then
-                resultantTriangles[1] = {}
-                for _,vertex in pairs(unclippedPoints) do
+            for _,t in pairs(resultantTriangles) do
+                local triangleScreenValues = {}
+                for _,vertex in pairs(t.vertices) do
                     local screenPos = worldSpaceToScreenSpace(vertex:toCameraTransform())
-                    table.insert(resultantTriangles[1],screenPos.x)
-                    table.insert(resultantTriangles[1],screenPos.y)
+                    table.insert(triangleScreenValues,screenPos.x)
+                    table.insert(triangleScreenValues,screenPos.y)
                 end
-            elseif #clippedPoints == 1 then
-                local tri1,tri2={},{}
-                tri1.p1 = unclippedPoints[1]
-                tri1.p2 = unclippedPoints[2]
-                tri1.p3 = getVectorPlaneIntersection( tri1.p1, dirBetween3DPoints(tri1.p1,clippedPoints[1]), clippedPointsPlanes[1])
-                tri2.p1 = tri1.p3
-                tri2.p2 = unclippedPoints[2]
-                tri2.p3 = getVectorPlaneIntersection( tri2.p2, dirBetween3DPoints(tri2.p2,clippedPoints[1]), clippedPointsPlanes[1])
-                local triangles = {tri1,tri2}
 
-                if tri1.p3 ~= nil and tri2.p3 ~= nil then
-                    resultantTriangles[1],resultantTriangles[2]={},{}
-                    for resultantTriangleIndex,triangle in ipairs(triangles) do
-                        for _,vertex in pairs(triangle) do
-                            local screenPos = worldSpaceToScreenSpace(vertex:toCameraTransform())
-                            table.insert(resultantTriangles[resultantTriangleIndex],screenPos.x)
-                            table.insert(resultantTriangles[resultantTriangleIndex],screenPos.y)
-                        end
-                    end
-                end
-            elseif #clippedPoints == 2 then
-                local p1 = unclippedPoints[1]
-                local p2 = getVectorPlaneIntersection( p1, dirBetween3DPoints(p1,clippedPoints[1]), clippedPointsPlanes[1]) -- currently supports 1 clipped plane
-                local p3 = getVectorPlaneIntersection( p1, dirBetween3DPoints(p1,clippedPoints[2]), clippedPointsPlanes[2])
-
-                local triangle = {p1,p2,p3}
-
-                if p2 ~= nil and p3 ~= nil then
-
-                    resultantTriangles[1] = {}
-                    for _,vertex in pairs(triangle) do
-                        local screenPos = worldSpaceToScreenSpace(vertex:toCameraTransform())
-                        table.insert(resultantTriangles[1],screenPos.x)
-                        table.insert(resultantTriangles[1],screenPos.y)
-                    end
-
-                end
-            end
-            if triangleIndex==1 and #clippedPoints > 0 then
-                trace(#clippedPoints..","..#clippedPointsPlanes[1])
-            end
-            for j=1,#resultantTriangles do
-                if triangleIndex==1 then
-                --table.insert(resultantTriangles[j],(triangleIndex%11)+1)
-                table.insert(resultantTriangles[j],12)
-                trib(table.unpack(resultantTriangles[j]))
-                end
+                table.insert(triangleScreenValues,5+(6%triangleIndex))
+                tri(table.unpack(triangleScreenValues))
+                triangleScreenValues[7] = 12
+                trib(table.unpack(triangleScreenValues))
             end
 
         end
@@ -1133,7 +1193,7 @@ function TIC()
 		camera:updateVectors()
 		camera:updateClippingPlanes()
 		loadObjects()
-		cube=Object3D("mesh","cube",Pos3D(0,0,5),Rot3D(0,0,0),Dir3D(0,0,1),0.5)
+		cube=Object3D("mesh","cube",Pos3D(0,0,3),Rot3D(0,0,0),Dir3D(0,0,1),3)
 	end
 
 	cls(0)
@@ -1151,7 +1211,7 @@ function TIC()
 		camera:rotate( Rot3D(0,2*math.pi*(physicalSpace/viewport.size.w),0) )
 	end
 
-	--scene.get(cube).rot:rotate(0,math.pi/64,0)
+	if btn(4) then scene.get(cube).pos = Pos3D(0,math.sin(t/20)*3,3) end
 
 	-- light.pos.x=10*math.sin(t/100)
 	-- light.pos.z=10*math.cos(t/100)+15

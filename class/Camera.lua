@@ -63,7 +63,7 @@ function Camera.mt.__call(self,pos,rot,dir)
         local clippingPlanes = self.clippingPlanes
         local isInView = true
         local planesClipped = {}
-        local errorMargin = 0.01
+        local errorMargin = 0.005
 
         local planeDistFromOrigin = -( clippingPlanes.near.normal:dot(cameraPos) )
         local signedDistanceToPlane = clippingPlanes.near.normal:dot(p) + planeDistFromOrigin
