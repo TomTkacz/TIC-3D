@@ -3,6 +3,9 @@ Pos3D.mt={}
 Pos3D.mti={}
 
 function Pos3D.mt.__call(self,x,y,z,w)
+	if x==nil then x=0 end
+	if y==nil then y=0 end
+	if z==nil then z=0 end
 	local s={x=x,y=y,z=z,w=1}
 	if w~=nil then s.w=w end
 	s.matrix=Matrix(4,1)

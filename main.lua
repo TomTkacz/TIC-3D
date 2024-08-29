@@ -194,7 +194,7 @@ function TIC()
 		camera:updateVectors()
 		camera:updateClippingPlanes()
 		loadObjects()
-		cube=Object3D("mesh","cube",Pos3D(0,0,3),Rot3D(0,0,0),Dir3D(0,0,1),3)
+		cube=Object3D("mesh","cube",Pos3D(0,0,3),Rot3D(0,0,0),Dir3D(0,0,1),1)
 	end
 
 	cls(0)
@@ -204,7 +204,7 @@ function TIC()
 	if btn(2) then camera.pos=translate3D(camera.pos,camera.horizontalVector,0.1) end --right
 	if btn(3) then camera.pos=translate3D(camera.pos,camera.horizontalVector,-0.1) end --left
 
-	if btn(4) then scene.get(cube).pos = Pos3D(0,math.sin(t/20)*3,3) end
+	if btn(4) then scene.get(cube).rot:rotate(0.1,0,0.1) end
 
 	camera:updateVectors()
 	camera:updateClippingPlanes()
@@ -214,10 +214,7 @@ function TIC()
 		camera:rotate( Rot3D(0,2*math.pi*(physicalSpace/viewport.size.w),0) )
 	end
 
-	-- light.pos.x=10*math.sin(t/100)
-	-- light.pos.z=10*math.cos(t/100)+15
-	-- light.pos.y=3*math.sin(t/180)
-
 	renderScreen()
+
 	t=t+1
 end
