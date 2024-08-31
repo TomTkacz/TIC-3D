@@ -124,28 +124,20 @@ function Matrix.mti.__sub(self,m)
 	return n
 end
 
-function Matrix.mti.__mul(self,m)
-	if type(m)=="table" then
-		if self.cols ~= m.rows then return end
-		local n=Matrix(self.rows,m.cols)
-		for nrow=1,self.rows do
-			for ncol=1,m.cols do
-				local total=0
-				for col=1,self.cols do
-					total=total+(self[nrow][col]*m[col][ncol])
-				end
-				n[nrow][ncol]=total
+function Matrix.mti.__mul(self,m2)
+	-- multiply rows with columns
+	local m1=self
+	local mtx = Matrix(m1.rows,m2.cols)
+	for i = 1,m1.rows do
+		for j = 1,m2.cols do
+			local num = m1.values[i][1] * m2.values[1][j]
+			for n = 2,m1.cols do
+				num = num + m1.values[i][n] * m2.values[n][j]
 			end
-		end
-		return n
-	end
-	local n=Matrix(self.rows,self.cols)
-	for row=1,self.rows do
-		for col=1,self.cols do
-			n[row][col] = self[row][col]*m
+			mtx.values[i][j] = num
 		end
 	end
-	return n
+	return mtx
 end
 
 setmetatable(Matrix,Matrix.mt)

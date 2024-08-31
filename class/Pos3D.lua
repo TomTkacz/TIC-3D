@@ -82,7 +82,7 @@ function Pos3D.mt.__call(self,x,y,z,w)
 		-- translate/rotate about the camera
 		vertexPos:translate(-camera.pos.x,-camera.pos.y,-camera.pos.z)
 		vertexPos:rotateAboutAxis(Dir3D(1,0,0),-camera.rot.x)
-		vertexPos:rotateAboutAxis(Dir3D(0,1,0),math.pi-camera.rot.y)
+		vertexPos:rotateAboutAxis(Dir3D(0,1,0),PI-camera.rot.y)
 		vertexPos:rotateAboutAxis(Dir3D(0,0,1),-camera.rot.z)
 
 		return vertexPos

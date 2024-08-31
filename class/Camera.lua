@@ -28,32 +28,32 @@ function Camera.mt.__call(self,pos,rot,dir)
             origin=self.pos,
             normal=self.dir:copy(),
         }
-        self.clippingPlanes.left.normal:rotateAboutAxis(self.verticalVector,-(viewport.fov/2)+(math.pi/2))
+        self.clippingPlanes.left.normal:rotateAboutAxis(self.verticalVector,-(viewport.fov/2)+(PI_OVER_TWO))
 
         self.clippingPlanes.right = {
             origin=self.pos,
             normal=self.dir:copy(),
         }
-        self.clippingPlanes.right.normal:rotateAboutAxis(self.verticalVector,(viewport.fov/2)-(math.pi/2))
+        self.clippingPlanes.right.normal:rotateAboutAxis(self.verticalVector,(viewport.fov/2)-(PI_OVER_TWO))
 
         self.clippingPlanes.top = {
             origin=self.pos,
             normal=self.dir:copy(),
         }
-        self.clippingPlanes.top.normal:rotateAboutAxis(self.horizontalVector,(viewport._vfov/2)-(math.pi/2))
+        self.clippingPlanes.top.normal:rotateAboutAxis(self.horizontalVector,(viewport._vfov/2)-(PI_OVER_TWO))
 
         self.clippingPlanes.bottom = {
             origin=self.pos,
             normal=self.dir:copy(),
         }
-        self.clippingPlanes.bottom.normal:rotateAboutAxis(self.horizontalVector,-(viewport._vfov/2)+(math.pi/2))
+        self.clippingPlanes.bottom.normal:rotateAboutAxis(self.horizontalVector,-(viewport._vfov/2)+(PI_OVER_TWO))
 
     end
 
     function s:updateVectors()
         local horizontalVector,verticalVector = self.dir:copy(),self.dir:copy()
-        horizontalVector:rotate(0,-math.pi/2,0) -- points right (will need to fixed if cam points up or down)
-        verticalVector:rotateAboutAxis(horizontalVector,math.pi/2) -- points up
+        horizontalVector:rotate(0,-PI_OVER_TWO,0) -- points right (will need to fixed if cam points up or down)
+        verticalVector:rotateAboutAxis(horizontalVector,PI_OVER_TWO) -- points up
         self.horizontalVector,self.verticalVector = horizontalVector,verticalVector
     end
 

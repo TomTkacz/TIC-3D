@@ -16,6 +16,7 @@ include "class.Size2D"
 include "class.Ray"
 include "class.Matrix"
 include "class.Object3D"
+include "debug.Profiler"
 
 -- GLOBAL VALUES --
 
@@ -23,6 +24,9 @@ SCREEN_WIDTH=240
 SCREEN_HEIGHT=136
 MAP_BASE_ADDRESS=0x8000
 MAP_SIZE_BYTES=32640
+PI=3.1415927
+TWO_PI=6.2831854
+PI_OVER_TWO=1.57079635
 
 -- SCENE COMPONENTS --
 
@@ -121,7 +125,7 @@ function dirBetween3DPoints(p1,p2)
 	local dx = p2.x-p1.x
 	local dy = p2.y-p1.y
 	local dz = p2.z-p1.z
-	return Dir3D(round(dx/dist,4),round(dy/dist,4),round(dz/dist,4))
+	return Dir3D(dx/dist,dy/dist,dz/dist)
 end
 
 function getSurfaceNormal(p1,p2,p3)
@@ -138,11 +142,11 @@ function getTriangleCircumcenter(pA,pB,pC)
 
 	local abMidpoint = (pA+pB)/2
 	local abPerpDir = dirBetween3DPoints(pA,pB)
-	abPerpDir:rotateAboutAxis(faceNormal,math.pi/2)
+	abPerpDir:rotateAboutAxis(faceNormal,PI_OVER_TWO)
 
 	local bcMidpoint = (pB+pC)/2
 	local bcPerpDir = dirBetween3DPoints(pB,pC)
-	bcPerpDir:rotateAboutAxis(faceNormal,math.pi/2)
+	bcPerpDir:rotateAboutAxis(faceNormal,PI_OVER_TWO)
 
 	-- L1 = abMidpoint + a * abPerpDir
 	-- L2 = bcMidpoint + b * bcPerpDir
@@ -195,6 +199,7 @@ function TIC()
 		camera:updateClippingPlanes()
 		loadObjects()
 		cube=Object3D("mesh","cube",Pos3D(0,0,3),Rot3D(0,0,0),Dir3D(0,0,1),1)
+		--profiler.start()
 	end
 
 	cls(0)
@@ -211,10 +216,17 @@ function TIC()
 
 	if gmouse.down then
 		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)
-		camera:rotate( Rot3D(0,2*math.pi*(physicalSpace/viewport.size.w),0) )
+		camera:rotate( Rot3D(0,2*PI*(physicalSpace/viewport.size.w),0) )
 	end
 
 	renderScreen()
+	print(t)
+
+	-- if t==10 then
+	-- 	profiler.stop()
+	-- 	trace(profiler.report(20))
+	-- 	exit()
+	-- end
 
 	t=t+1
 end

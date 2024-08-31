@@ -53,22 +53,19 @@ function copyTable(obj, seen)
 end
 
 function getVectorPlaneIntersection(pos,dir,plane)
-    if plane.normal:dot(dir) == 0 then return end
-    local t = ( plane.normal:dot(plane.origin) - plane.normal:dot(pos) ) / plane.normal:dot(dir)
+    local planeDotDir = plane.normal:dot(dir)
+    if planeDotDir == 0 then return end
+    local t = ( plane.normal:dot(plane.origin) - plane.normal:dot(pos) ) / planeDotDir
     return pos + ( dir * t )
 end
 
 function getSignedDistToPlane(pos,plane)
     local sign = 1
     local planeNormalToPointDot = plane.normal:dot( dirBetween3DPoints(plane.origin,pos) )
-    if planeNormalToPointDot > 0 then
-        sign=1
-    elseif planeNormalToPointDot < 0 then
-        sign=-1
-    else return 0 end
+    if planeNormalToPointDot < 0 then sign=-1 else return 0 end
     return sign * distBetween3DPoints( pos, getVectorPlaneIntersection( pos,plane.normal*sign,plane ) )
 end
 
 function inRads(v)
-    return v%(2*math.pi)
+    return v%(TWO_PI)
 end
