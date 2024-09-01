@@ -8,18 +8,17 @@ function Pos3D.mt.__call(self,x,y,z,w)
 	if z==nil then z=0 end
 	local s={x=x,y=y,z=z,w=1}
 	if w~=nil then s.w=w end
-	s.matrix=Matrix(4,1)
-	s.matrix.values={{s.x},{s.y},{s.z},{s.w}}
+	s.matrix=Matrix4D.fromVector3D(s)
 
 	function s:updateMatrix()
 		self.matrix.values={{self.x},{self.y},{self.z},{self.w}}
 	end
 
-	function s:copy()
+	function s:getCopy()
 		return Pos3D(self.x,self.y,self.z,self.w)
 	end
 
-	function s:dot(p2)
+	function s:getDotProduct(p2)
 		return (self.x*p2.x)+(self.y*p2.y)+(self.z*p2.z)+(self.w*p2.w)
 	end
 
@@ -44,7 +43,7 @@ function Pos3D.mt.__call(self,x,y,z,w)
 		self:updateMatrix()
 	end
 
-	function s:cross(v)
+	function s:getCrossProduct(v)
 		local x = ( self.y * v.z ) - ( v.y * self.z )
 		local y = ( self.z * v.x ) - ( v.z * self.x )
 		local z = ( self.x * v.y ) - ( v.x * self.y )
@@ -53,8 +52,8 @@ function Pos3D.mt.__call(self,x,y,z,w)
 
 	function s:toLocalTransform(origin,rot,scale)
 
-		local vertexPos = self:copy()
-
+		local vertexPos = self:getCopy()
+		
 		-- scale
 		vertexPos:scale(scale,scale,scale)
 
@@ -68,16 +67,16 @@ function Pos3D.mt.__call(self,x,y,z,w)
 
 	end
 	
-	function s:magnitude()
+	function s:getMagnitude()
 		if s.w == 0 then
-			return math.sqrt(self:dot(self))
+			return math.sqrt(self:getDotProduct(self))
 		end
-		return math.sqrt(math.abs(self:dot(self)-1))
+		return math.sqrt(math.abs(self:getDotProduct(self)-1))
 	end
 
 	function s:toCameraTransform()
 
-		local vertexPos = self:copy()
+		local vertexPos = self:getCopy()
 
 		-- translate/rotate about the camera
 		vertexPos:translate(-camera.pos.x,-camera.pos.y,-camera.pos.z)
@@ -99,9 +98,8 @@ function Pos3D.mt.__call(self,x,y,z,w)
 	return s
 end
 
-function Pos3D.fromMatrix(m)
-	if m.rows>4 or m.cols>4 then return end
-	return Pos3D(m[1][1],m[1][2],m[1][3],m[1][4])
+function Pos3D.fromMatrix4D(m)
+	return Pos3D(m[1][1],m[2][1],m[3][1],m[4][1])
 end
 
 function Pos3D.mti.__add(self,v)

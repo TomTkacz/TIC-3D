@@ -21,37 +21,37 @@ function Camera.mt.__call(self,pos,rot,dir)
 
         self.clippingPlanes.near = {
             origin=translate3D(self.pos,self.dir,0.25),
-            normal=self.dir:copy(),
+            normal=self.dir:getCopy(),
         }
 
         self.clippingPlanes.left = {
             origin=self.pos,
-            normal=self.dir:copy(),
+            normal=self.dir:getCopy(),
         }
         self.clippingPlanes.left.normal:rotateAboutAxis(self.verticalVector,-(viewport.fov/2)+(PI_OVER_TWO))
 
         self.clippingPlanes.right = {
             origin=self.pos,
-            normal=self.dir:copy(),
+            normal=self.dir:getCopy(),
         }
         self.clippingPlanes.right.normal:rotateAboutAxis(self.verticalVector,(viewport.fov/2)-(PI_OVER_TWO))
 
         self.clippingPlanes.top = {
             origin=self.pos,
-            normal=self.dir:copy(),
+            normal=self.dir:getCopy(),
         }
         self.clippingPlanes.top.normal:rotateAboutAxis(self.horizontalVector,(viewport._vfov/2)-(PI_OVER_TWO))
 
         self.clippingPlanes.bottom = {
             origin=self.pos,
-            normal=self.dir:copy(),
+            normal=self.dir:getCopy(),
         }
         self.clippingPlanes.bottom.normal:rotateAboutAxis(self.horizontalVector,-(viewport._vfov/2)+(PI_OVER_TWO))
 
     end
 
     function s:updateVectors()
-        local horizontalVector,verticalVector = self.dir:copy(),self.dir:copy()
+        local horizontalVector,verticalVector = self.dir:getCopy(),self.dir:getCopy()
         horizontalVector:rotate(0,-PI_OVER_TWO,0) -- points right (will need to fixed if cam points up or down)
         verticalVector:rotateAboutAxis(horizontalVector,PI_OVER_TWO) -- points up
         self.horizontalVector,self.verticalVector = horizontalVector,verticalVector
@@ -64,28 +64,28 @@ function Camera.mt.__call(self,pos,rot,dir)
         local isInView = true
         local errorMargin = 0.005
 
-        local planeDistFromOrigin = -( clippingPlanes.left.normal:dot(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.left.normal:dot(p) + planeDistFromOrigin
+        local planeDistFromOrigin = -( clippingPlanes.left.normal:getDotProduct(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.left.normal:getDotProduct(p) + planeDistFromOrigin
         isInView = isInView and signedDistanceToPlane >= -r - errorMargin
         if not isInView then return false end
 
-        local planeDistFromOrigin = -( clippingPlanes.top.normal:dot(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.top.normal:dot(p) + planeDistFromOrigin
+        local planeDistFromOrigin = -( clippingPlanes.top.normal:getDotProduct(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.top.normal:getDotProduct(p) + planeDistFromOrigin
         isInView = isInView and signedDistanceToPlane >= -r - errorMargin
         if not isInView then return false end
 
-        local planeDistFromOrigin = -( clippingPlanes.right.normal:dot(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.right.normal:dot(p) + planeDistFromOrigin
+        local planeDistFromOrigin = -( clippingPlanes.right.normal:getDotProduct(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.right.normal:getDotProduct(p) + planeDistFromOrigin
         isInView = isInView and signedDistanceToPlane >= -r - errorMargin
         if not isInView then return false end
 
-        local planeDistFromOrigin = -( clippingPlanes.bottom.normal:dot(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.bottom.normal:dot(p) + planeDistFromOrigin
+        local planeDistFromOrigin = -( clippingPlanes.bottom.normal:getDotProduct(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.bottom.normal:getDotProduct(p) + planeDistFromOrigin
         isInView = isInView and signedDistanceToPlane >= -r - errorMargin
         if not isInView then return false end
 
-        local planeDistFromOrigin = -( clippingPlanes.near.normal:dot(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.near.normal:dot(p) + planeDistFromOrigin
+        local planeDistFromOrigin = -( clippingPlanes.near.normal:getDotProduct(cameraPos) )
+        local signedDistanceToPlane = clippingPlanes.near.normal:getDotProduct(p) + planeDistFromOrigin
         isInView = isInView and signedDistanceToPlane >= -r - errorMargin
         if not isInView then return false end
 

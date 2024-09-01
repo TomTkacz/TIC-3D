@@ -15,6 +15,7 @@ include "class.Dir3D"
 include "class.Size2D"
 include "class.Ray"
 include "class.Matrix"
+include "class.Matrix4D"
 include "class.Object3D"
 include "debug.Profiler"
 
@@ -117,7 +118,7 @@ end
 
 function distBetween3DPoints(p1,p2)
 	local delta = p1-p2
-	return math.sqrt(delta:dot(delta))
+	return math.sqrt(delta:getDotProduct(delta))
 end
 
 function dirBetween3DPoints(p1,p2)
@@ -148,18 +149,12 @@ function getTriangleCircumcenter(pA,pB,pC)
 	local bcPerpDir = dirBetween3DPoints(pB,pC)
 	bcPerpDir:rotateAboutAxis(faceNormal,PI_OVER_TWO)
 
-	-- L1 = abMidpoint + a * abPerpDir
-	-- L2 = bcMidpoint + b * bcPerpDir
-	-- abMidpoint + a * abPerpDir = bcMidpoint + b * bcPerpDir
-	-- a * abPerpDir = ( bcMidpoint - abMidpoint ) + b * bcPerpDir
-	-- a * ( abPerpDir * bcPerpDir ) = ( bcMidpoint - abMidpoint ) * bcPerpDir
-
 	local a = 0
 	local lastDifference = math.huge
 	while a < 5 do
-		local left = ( abPerpDir:cross(bcPerpDir) ) * a
-		local right = ( bcMidpoint - abMidpoint ):cross(bcPerpDir)
-		local difference = (left-right):magnitude()
+		local left = ( abPerpDir:getCrossProduct(bcPerpDir) ) * a
+		local right = ( bcMidpoint - abMidpoint ):getCrossProduct(bcPerpDir)
+		local difference = (left-right):getMagnitude()
 		if difference > lastDifference then break end
 		lastDifference = difference
 		a=a+0.01
@@ -198,7 +193,7 @@ function TIC()
 		camera:updateVectors()
 		camera:updateClippingPlanes()
 		loadObjects()
-		cube=Object3D("mesh","cube",Pos3D(0,0,3),Rot3D(0,0,0),Dir3D(0,0,1),1)
+		cube=Object3D("mesh","cube",Pos3D(0,0,10),Rot3D(0,0,0),Dir3D(0,0,1),1)
 		--profiler.start()
 	end
 
