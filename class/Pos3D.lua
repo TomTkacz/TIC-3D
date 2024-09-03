@@ -51,20 +51,11 @@ function Pos3D.mt.__call(self,x,y,z,w)
 	end
 
 	function s:toLocalTransform(origin,rot,scale)
+		return self.matrix:toLocalTransform(origin,rot,scale)
+	end
 
-		local vertexPos = self:getCopy()
-		
-		-- scale
-		vertexPos:scale(scale,scale,scale)
-
-		-- translate/rotate about the origin
-		vertexPos:rotateAboutAxis(Dir3D(1,0,0),rot.x)
-		vertexPos:rotateAboutAxis(Dir3D(0,1,0),rot.y)
-		vertexPos:rotateAboutAxis(Dir3D(0,0,1),rot.z)
-		vertexPos:translate(origin.x,origin.y,origin.z)
-
-		return vertexPos
-
+	function s:toScreenSpace()
+		return self.matrix:toScreenSpace()
 	end
 	
 	function s:getMagnitude()

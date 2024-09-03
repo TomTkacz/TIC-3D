@@ -40,6 +40,7 @@ viewport={
 function viewport:updateFocalDist()
 	self._focalDist = self.size.w / ( 2*math.tan(math.rad(self.fov)/2) )
 	self._vfov = 2 * math.atan( self.size.h, (2*self._focalDist) ) -- in radians
+	Matrix4D.screenProjectionMatrix[1][1],Matrix4D.screenProjectionMatrix[2][2]=self._focalDist,self._focalDist
 end
 viewport:updateFocalDist()
 
@@ -59,26 +60,6 @@ scene={
 		return scene.activeObjects[id]
 	end
 }
-
--- CONVERSION METHODS --
-
-function worldSpaceToViewportSpace(pos)
-	local x,y,z = pos.x,pos.y,pos.z
-	local vpX = (x*viewport._focalDist)/z
-	local vpY = (y*viewport._focalDist)/z
-	return Pos2D(vpX+viewport.size.w/2,vpY+viewport.size.h/2)
-end
-
-function viewportSpaceToScreenSpace(pos)
-	local x,y = pos.x,pos.y
-	local screenX = (x*SCREEN_WIDTH)/viewport.size.w
-	local screenY = (y*SCREEN_HEIGHT)/viewport.size.h
-	return Pos2D(screenX,screenY)
-end
-
-function worldSpaceToScreenSpace(pos)
-	return viewportSpaceToScreenSpace(worldSpaceToViewportSpace(pos))
-end
 
 -- METHODS --
 
@@ -184,6 +165,10 @@ end
 -- MAIN LOOP --
 
 t=0
+frameStartTimeMilliseconds=0
+frameEndTimeMilliseconds=0
+fpsInterval=5
+currentFPS=0
 
 function TIC()
 
@@ -193,7 +178,7 @@ function TIC()
 		camera:updateVectors()
 		camera:updateClippingPlanes()
 		loadObjects()
-		cube=Object3D("mesh","cube",Pos3D(0,0,10),Rot3D(0,0,0),Dir3D(0,0,1),1)
+		cube=Object3D("mesh","knife",Pos3D(0,0,3),Rot3D(0,0,0),Dir3D(0,0,1),1)
 		--profiler.start()
 	end
 
@@ -206,22 +191,29 @@ function TIC()
 
 	if btn(4) then scene.get(cube).rot:rotate(0.1,0,0.1) end
 
-	camera:updateVectors()
-	camera:updateClippingPlanes()
-
 	if gmouse.down then
 		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)
 		camera:rotate( Rot3D(0,2*PI*(physicalSpace/viewport.size.w),0) )
 	end
 
+	camera:updateVectors()
+	camera:updateClippingPlanes()
+
 	renderScreen()
-	print(t)
 
 	-- if t==10 then
 	-- 	profiler.stop()
 	-- 	trace(profiler.report(20))
 	-- 	exit()
 	-- end
+
+	if t%fpsInterval==0 then
+		frameEndTimeMilliseconds=time()
+		currentFPS=fpsInterval/((frameEndTimeMilliseconds-frameStartTimeMilliseconds)/1000)
+		frameStartTimeMilliseconds=time()
+	end
+
+	print("FPS:"..currentFPS)
 
 	t=t+1
 end

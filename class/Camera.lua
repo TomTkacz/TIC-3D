@@ -20,7 +20,7 @@ function Camera.mt.__call(self,pos,rot,dir)
         self.clippingPlanes = {}
 
         self.clippingPlanes.near = {
-            origin=translate3D(self.pos,self.dir,0.25),
+            origin=self.pos,
             normal=self.dir:getCopy(),
         }
 

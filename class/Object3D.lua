@@ -117,15 +117,18 @@ function Object3D._renderRoutines.mesh(self)
                 local triangleScreenValues = {}
 
                 for _,vertex in pairs(t.vertices) do
-                    local screenPos = worldSpaceToScreenSpace(vertex:toCameraTransform())
+                    --local screenPos = worldSpaceToScreenSpace(vertex:toCameraTransform())
+                    -- table.insert(triangleScreenValues,screenPos.x)
+                    -- table.insert(triangleScreenValues,screenPos.y)
+                    local screenPos = vertex:toCameraTransform():toScreenSpace()
                     table.insert(triangleScreenValues,screenPos.x)
                     table.insert(triangleScreenValues,screenPos.y)
                 end
 
                 table.insert(triangleScreenValues,1+(triangleIndex%7))
                 tri(table.unpack(triangleScreenValues))
-                triangleScreenValues[7] = 12
-                trib(table.unpack(triangleScreenValues))
+                --triangleScreenValues[7] = 12
+                --trib(table.unpack(triangleScreenValues))
 
             end
 

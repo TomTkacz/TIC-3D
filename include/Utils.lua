@@ -60,10 +60,7 @@ function getVectorPlaneIntersection(pos,dir,plane)
 end
 
 function getSignedDistToPlane(pos,plane)
-    local sign = 1
-    local planeNormalToPointDot = plane.normal:getDotProduct( dirBetween3DPoints(plane.origin,pos) )
-    if planeNormalToPointDot < 0 then sign=-1 else return 0 end
-    return sign * distBetween3DPoints( pos, getVectorPlaneIntersection( pos,plane.normal*sign,plane ) )
+    return plane.normal:getDotProduct(pos-plane.origin)
 end
 
 function inRads(v)

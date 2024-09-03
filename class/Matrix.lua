@@ -2,14 +2,13 @@ Matrix={}
 Matrix.mt={}
 Matrix.mti={}
 
-function Matrix.mt.__call(self,rows,cols,fill)
-	if fill==nil then fill=0 end
+function Matrix.mt.__call(self,rows,cols)
 	s={rows=rows,cols=cols,values={}}
 
 	for row=1,rows do
 		s.values[row]={}
 		for col=1,cols do
-			s.values[row][col]=fill
+			s.values[row][col]=0
 		end
 	end
 	setmetatable(s,Matrix.mti)
