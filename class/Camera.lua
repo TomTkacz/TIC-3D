@@ -51,10 +51,8 @@ function Camera.mt.__call(self,pos,rot,dir)
     end
 
     function s:updateVectors()
-        local horizontalVector,verticalVector = self.dir:getCopy(),self.dir:getCopy()
-        horizontalVector:rotate(0,-PI_OVER_TWO,0) -- points right (will need to fixed if cam points up or down)
-        verticalVector:rotateAboutAxis(horizontalVector,PI_OVER_TWO) -- points up
-        self.horizontalVector,self.verticalVector = horizontalVector,verticalVector
+        local horizontalX,horizontalZ = math.cos(PI-self.rot.y),math.sin(PI-self.rot.y)
+        self.horizontalVector,self.verticalVector = Dir3D(horizontalX,0,horizontalZ),Dir3D(0,1,0)
     end
 
     function s:isPointInView(p,r)

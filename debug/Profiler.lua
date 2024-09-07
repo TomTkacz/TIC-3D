@@ -144,7 +144,7 @@ function profiler.query(limit)
     if profiler._tcalled[f] then
       dt = profiler.clock() - profiler._tcalled[f]
     end
-    t[i] = { i, profiler._labeled[f] or '?', profiler._ncalls[f], profiler._telapsed[f] + dt, profiler._defined[f] }
+    t[i] = { i, profiler._labeled[f] or '?', profiler._ncalls[f], (profiler._telapsed[f] + dt).." - "..(round( (profiler._telapsed[f] + dt)/profiler._ncalls[f],3)*1000).."mcs", profiler._defined[f] }
   end
   return t
 end

@@ -4,7 +4,7 @@ Dir3D.mti={}
 
 function Dir3D.mt.__call(self,x,y,z,w)
 	local s={x=x,y=y,z=z,w=0}
-	if w~=nil then s.w=w end
+	if w then s.w=w end
 	s.matrix=Matrix4D.fromVector3D(s)
 
 	function s:getCopy()

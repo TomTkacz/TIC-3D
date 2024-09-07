@@ -52,20 +52,21 @@ function Object3D._renderRoutines.mesh(self)
         return copy
     end
 
+    local getSignedDistToPlane = getSignedDistToPlane
+    local getVectorPlaneIntersection = getVectorPlaneIntersection
+    local dirBetween3DPoints = dirBetween3DPoints
+
     local function getResultantTriangles(verticesTable)
 
         local resultantTriangles,newBorderVertices = {},{}
         local borderVertices = verticesTable
-        local getSignedDistToPlane = getSignedDistToPlane
-        local getVectorPlaneIntersection = getVectorPlaneIntersection
-        local dirBetween3DPoints = dirBetween3DPoints
 
         for _,plane in pairs(camera.clippingPlanes) do
 
             for i,v1 in ipairs(borderVertices) do
 
                 local v2 = nil
-                if i~=#borderVertices then v2=borderVertices[i+1] else v2=borderVertices[1] end
+                v2 = i~=#borderVertices and borderVertices[i+1] or borderVertices[1]
 
                 local closerPointToPlane,furtherPointToPlane = v1,v2
                 local signedDistv1ToPlane,signedDistv2ToPlane =  getSignedDistToPlane(v1,plane),getSignedDistToPlane(v2,plane)
@@ -117,9 +118,6 @@ function Object3D._renderRoutines.mesh(self)
                 local triangleScreenValues = {}
 
                 for _,vertex in pairs(t.vertices) do
-                    --local screenPos = worldSpaceToScreenSpace(vertex:toCameraTransform())
-                    -- table.insert(triangleScreenValues,screenPos.x)
-                    -- table.insert(triangleScreenValues,screenPos.y)
                     local screenPos = vertex:toCameraTransform():toScreenSpace()
                     table.insert(triangleScreenValues,screenPos.x)
                     table.insert(triangleScreenValues,screenPos.y)
@@ -127,8 +125,8 @@ function Object3D._renderRoutines.mesh(self)
 
                 table.insert(triangleScreenValues,1+(triangleIndex%7))
                 tri(table.unpack(triangleScreenValues))
-                --triangleScreenValues[7] = 12
-                --trib(table.unpack(triangleScreenValues))
+                -- triangleScreenValues[7] = 12
+                -- trib(table.unpack(triangleScreenValues))
 
             end
 
