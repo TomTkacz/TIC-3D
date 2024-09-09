@@ -111,7 +111,7 @@ function Matrix4D.mt.__call(self,x,y,z,w)
 		m:applyScaleFactor(scale,scale,scale)
 		m:applyRotation(rot.x,rot.y,rot.z)
 		m:applyTranslation(origin.x,origin.y,origin.z)
-		return Pos3D.fromMatrix4D(m)
+		return Pos3D(m[1][1],m[2][1],m[3][1],m[4][1])
 	end
 
 	function s:toScreenSpace()

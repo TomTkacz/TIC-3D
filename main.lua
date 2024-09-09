@@ -28,6 +28,7 @@ MAP_SIZE_BYTES=32640
 PI=3.1415927
 TWO_PI=6.2831854
 PI_OVER_TWO=1.57079635
+WORLD_ORIGIN=Pos3D(0,0,0)
 
 -- SCENE COMPONENTS --
 
@@ -176,9 +177,10 @@ function TIC()
 
 	if t==0 then
 		camera:updateVectors()
+		camera:initalizeClippingPlanes()
 		camera:updateClippingPlanes()
 		loadObjects()
-		cube=Object3D("mesh","knife",Pos3D(0,0,3),Rot3D(0,0,0),Dir3D(0,0,1),1)
+		cube=Object3D("mesh","cube",Pos3D(0,0,3),Rot3D(0,0,0),Dir3D(0,0,1),0.2)
 		--profiler.start()
 	end
 

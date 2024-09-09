@@ -10,6 +10,39 @@ function Camera.mt.__call(self,pos,rot,dir)
         dir=dir,
     }
 
+    function s:initalizeClippingPlanes()
+
+        self.clippingPlanes = {
+
+            near={
+                origin=WORLD_ORIGIN,
+                normalTheta=0,
+            },
+    
+            left={
+                origin=WORLD_ORIGIN,
+                normalTheta=-(viewport.fov/2)+(PI_OVER_TWO),
+            },
+    
+            right={
+                origin=WORLD_ORIGIN,
+                normalTheta=(viewport.fov/2)-(PI_OVER_TWO),
+            },
+    
+            top={
+                origin=WORLD_ORIGIN,
+                normalTheta=(viewport._vfov/2)-(PI_OVER_TWO),
+            },
+    
+            bottom={
+                origin=WORLD_ORIGIN,
+                normalTheta=-(viewport._vfov/2)+(PI_OVER_TWO)
+            },
+    
+        }
+
+    end
+
     function s:rotate(r)
         self.rot=self.rot+r
         self.dir:rotate(r.x,r.y,r.z)
@@ -17,36 +50,13 @@ function Camera.mt.__call(self,pos,rot,dir)
 
     function s:updateClippingPlanes()
 
-        self.clippingPlanes = {}
-
-        self.clippingPlanes.near = {
-            origin=self.pos,
-            normal=self.dir:getCopy(),
-        }
-
-        self.clippingPlanes.left = {
-            origin=self.pos,
-            normal=self.dir:getCopy(),
-        }
-        self.clippingPlanes.left.normal:rotateAboutAxis(self.verticalVector,-(viewport.fov/2)+(PI_OVER_TWO))
-
-        self.clippingPlanes.right = {
-            origin=self.pos,
-            normal=self.dir:getCopy(),
-        }
-        self.clippingPlanes.right.normal:rotateAboutAxis(self.verticalVector,(viewport.fov/2)-(PI_OVER_TWO))
-
-        self.clippingPlanes.top = {
-            origin=self.pos,
-            normal=self.dir:getCopy(),
-        }
-        self.clippingPlanes.top.normal:rotateAboutAxis(self.horizontalVector,(viewport._vfov/2)-(PI_OVER_TWO))
-
-        self.clippingPlanes.bottom = {
-            origin=self.pos,
-            normal=self.dir:getCopy(),
-        }
-        self.clippingPlanes.bottom.normal:rotateAboutAxis(self.horizontalVector,-(viewport._vfov/2)+(PI_OVER_TWO))
+        for k,p in pairs(self.clippingPlanes) do
+            local rotationAxis = (k=="left" or k=="right") and self.verticalVector or self.horizontalVector
+            local normal = self.dir:getCopy()
+            normal:rotateAboutAxis(rotationAxis,p.normalTheta)
+            self.clippingPlanes[k].normal = normal
+            self.clippingPlanes[k].origin = self.pos
+        end
 
     end
 
@@ -93,6 +103,7 @@ function Camera.mt.__call(self,pos,rot,dir)
     setmetatable(s,Camera.mti)
 
     s:rotate(s.rot)
+    s:updateVectors()
 
     return s
 

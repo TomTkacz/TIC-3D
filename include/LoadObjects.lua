@@ -102,5 +102,6 @@ function loadObjects()
 	end
 
 	scene.loadedObjects = objects
+	for k,_ in pairs(scene.loadedObjects) do trace(k) end
 
 end

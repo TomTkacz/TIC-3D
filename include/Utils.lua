@@ -53,9 +53,10 @@ function copyTable(obj, seen)
 end
 
 function getVectorPlaneIntersection(pos,dir,plane)
-    local planeDotDir = plane.normal:getDotProduct(dir)
+    local normal = plane.normal
+    local planeDotDir = normal:getDotProduct(dir)
     if planeDotDir == 0 then return end
-    local t = ( plane.normal:getDotProduct(plane.origin) - plane.normal:getDotProduct(pos) ) / planeDotDir
+    local t = normal:getDotProduct(plane.origin - pos) / planeDotDir
     return pos + ( dir * t )
 end
 

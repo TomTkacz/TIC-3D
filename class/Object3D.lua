@@ -14,7 +14,7 @@ function Object3D.mt.__call(self,type,...)
     if s.hasCustomRenderRoutine then s.renderRoutine = Object3D._renderRoutines[s.type] end
 
     function s:render()
-        return self.renderRoutine(self)
+        self.renderRoutine(self)
     end
 
     setmetatable(s,Object3D.mti)
@@ -44,33 +44,34 @@ function Object3D._renderRoutines.mesh(self)
     local mesh = scene.loadedObjects[self.meshID]
     self.origin = self.pos
 
-    local function shallowCopyTable(orig)
-        local copy = {}
-        for i, orig_value in ipairs(orig) do
-            copy[i] = orig_value
-        end
-        return copy
-    end
-
-    local getSignedDistToPlane = getSignedDistToPlane
-    local getVectorPlaneIntersection = getVectorPlaneIntersection
-    local dirBetween3DPoints = dirBetween3DPoints
+    -- local function shallowCopyTable(orig)
+    --     local copy = {}
+    --     for i=1, #orig do
+    --         copy[i] = orig[i]
+    --     end
+    --     return copy
+    -- end
 
     local function getResultantTriangles(verticesTable)
 
         local resultantTriangles,newBorderVertices = {},{}
         local borderVertices = verticesTable
+        local move = table.move
+        local abs = math.abs
 
-        for _,plane in pairs(camera.clippingPlanes) do
+        for planeIndex=1,#camera.clippingPlanes do
 
-            for i,v1 in ipairs(borderVertices) do
+            local plane = camera.clippingPlanes[planeIndex]
+            local insertIndex = 1
 
-                local v2 = nil
-                v2 = i~=#borderVertices and borderVertices[i+1] or borderVertices[1]
+            for i=1,#borderVertices do
+
+                local v1 = borderVertices[i]
+                local v2 = i~=#borderVertices and borderVertices[i+1] or borderVertices[1]
 
                 local closerPointToPlane,furtherPointToPlane = v1,v2
                 local signedDistv1ToPlane,signedDistv2ToPlane =  getSignedDistToPlane(v1,plane),getSignedDistToPlane(v2,plane)
-                if signedDistv2ToPlane < signedDistv1ToPlane then
+                if abs(signedDistv2ToPlane) < abs(signedDistv1ToPlane) then
                     closerPointToPlane = v2
                     furtherPointToPlane = v1
                 end
@@ -79,17 +80,19 @@ function Object3D._renderRoutines.mesh(self)
 
                 if signedDistv2ToPlane >= 0 then
                     if signedDistv1ToPlane < 0 then
-                        table.insert(newBorderVertices,intersectionPoint)
+                        newBorderVertices[insertIndex] = intersectionPoint
+                        insertIndex=insertIndex+1
                     end
-                    table.insert(newBorderVertices,v2)
+                    newBorderVertices[insertIndex] = v2
+                    insertIndex=insertIndex+1
                 elseif signedDistv1ToPlane >= 0 then
-                    table.insert(newBorderVertices,intersectionPoint)
+                    newBorderVertices[insertIndex] = intersectionPoint
+                    insertIndex=insertIndex+1
                 end
 
             end
 
-            borderVertices = shallowCopyTable(newBorderVertices)
-            newBorderVertices = {}
+            move(newBorderVertices,1,insertIndex-1,1,borderVertices)
 
         end
 
@@ -102,29 +105,40 @@ function Object3D._renderRoutines.mesh(self)
 
     end
 
-    for triangleIndex,triangle in ipairs(mesh.triangles) do
+    for triangleIndex=1,#mesh.triangles do
 
+        local triangle = mesh.triangles[triangleIndex]
+        local triangleVertices = triangle.vertices
         local triangleCenter = triangle.center:toLocalTransform(self.origin,self.rot,self.scale)
-        local triangleVertexLocalTransform = triangle.vertices[1]:toLocalTransform(self.origin,self.rot,self.scale)
+        local triangleVertexLocalTransform = triangleVertices[1]:toLocalTransform(self.origin,self.rot,self.scale)
         local triangleBoundingSphereRadius = distBetween3DPoints( triangleCenter, triangleVertexLocalTransform )
 
         if camera:isPointInView(triangleCenter,triangleBoundingSphereRadius) then
 
             local resultantTriangles = {}
-            resultantTriangles = getResultantTriangles({triangleVertexLocalTransform,triangle.vertices[2]:toLocalTransform(self.origin,self.rot,self.scale),triangle.vertices[3]:toLocalTransform(self.origin,self.rot,self.scale)})
+            resultantTriangles = getResultantTriangles({
+                triangleVertexLocalTransform,
+                triangleVertices[2]:toLocalTransform(self.origin,self.rot,self.scale),
+                triangleVertices[3]:toLocalTransform(self.origin,self.rot,self.scale)
+            })
 
-            for _,t in pairs(resultantTriangles) do
+            local triangleScreenValues = {}
+            local unpack = table.unpack
+            for i=1,#resultantTriangles do
 
-                local triangleScreenValues = {}
+                local t = resultantTriangles[i]
+                local insertIndex = 1
 
-                for _,vertex in pairs(t.vertices) do
+                for j=1,3 do
+                    local vertex = t.vertices[j]
                     local screenPos = vertex:toCameraTransform():toScreenSpace()
-                    table.insert(triangleScreenValues,screenPos.x)
-                    table.insert(triangleScreenValues,screenPos.y)
+                    triangleScreenValues[insertIndex] = screenPos.x
+                    triangleScreenValues[insertIndex+1] = screenPos.y
+                    insertIndex=insertIndex+2
                 end
 
-                table.insert(triangleScreenValues,1+(triangleIndex%7))
-                tri(table.unpack(triangleScreenValues))
+                triangleScreenValues[insertIndex] = 1+(triangleIndex%7)
+                tri(unpack(triangleScreenValues))
                 -- triangleScreenValues[7] = 12
                 -- trib(table.unpack(triangleScreenValues))
 
