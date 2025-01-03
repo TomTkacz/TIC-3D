@@ -29,6 +29,7 @@ PI=3.1415927
 TWO_PI=6.2831854
 PI_OVER_TWO=1.57079635
 WORLD_ORIGIN=Pos3D(0,0,0)
+Z_BUFFER={}
 
 -- SCENE COMPONENTS --
 
@@ -63,6 +64,15 @@ scene={
 }
 
 -- METHODS --
+
+function initializeZBuffer()
+	for col=1,SCREEN_WIDTH do
+		if not Z_BUFFER[col] then Z_BUFFER[col] = {} end
+		for row=1,SCREEN_HEIGHT do
+			Z_BUFFER[col][row] = math.huge
+		end
+	end
+end
 
 function calculateMeshOrigin(mesh)
 	local xAvg,yAvg,zAvg=0,0,0
@@ -158,6 +168,7 @@ function updateMouseInfo()
 end
 
 function renderScreen()
+	initializeZBuffer()
 	for _,obj in pairs(scene.activeObjects) do
 		obj:render()
 	end
@@ -180,7 +191,7 @@ function TIC()
 		camera:initalizeClippingPlanes()
 		camera:updateClippingPlanes()
 		loadObjects()
-		cube=Object3D("mesh","cube",Pos3D(0,0,3),Rot3D(0,0,0),Dir3D(0,0,1),0.2)
+		cube=Object3D("mesh","mips",Pos3D(0,-1.2,4),Rot3D(0,0,0),Dir3D(0,0,1),0.2)
 		--profiler.start()
 	end
 
@@ -191,7 +202,7 @@ function TIC()
 	if btn(2) then camera.pos=translate3D(camera.pos,camera.horizontalVector,0.1) end --right
 	if btn(3) then camera.pos=translate3D(camera.pos,camera.horizontalVector,-0.1) end --left
 
-	if btn(4) then scene.get(cube).rot:rotate(0.1,0,0.1) end
+	if btn(4) then scene.get(cube).rot:rotate(0,0.1,0) end
 
 	if gmouse.down then
 		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)

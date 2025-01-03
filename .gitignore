@@ -2,3 +2,5 @@
 .vscode
 build.lua
 assets/meshdata/*
+run.bat
+todo.txt

@@ -27,6 +27,7 @@ function byteToUTF8(codepoint)
 end
 
 function round(n,d)
+    if d == 0 then return math.floor(n+0.5) end
 	return math.floor(n*math.pow(10,d))/math.pow(10,d)
 end
 
@@ -66,4 +67,73 @@ end
 
 function inRads(v)
     return v%(TWO_PI)
+end
+
+function triCulled(x1, y1, x2, y2, x3, y3, color, callback)
+
+    if not callback then callback=pix end
+    local floor,min,max = math.floor,math.min,math.max
+
+    -- 28.4 fixed-point coordinates
+    local Y1 = floor(16.0 * y1 + 0.5)
+    local Y2 = floor(16.0 * y2 + 0.5)
+    local Y3 = floor(16.0 * y3 + 0.5)
+
+    local X1 = floor(16.0 * x1 + 0.5)
+    local X2 = floor(16.0 * x2 + 0.5)
+    local X3 = floor(16.0 * x3 + 0.5)
+
+    -- Deltas
+    local DX12, DY12 = X1 - X2, Y1 - Y2
+    local DX23, DY23 = X2 - X3, Y2 - Y3
+    local DX31, DY31 = X3 - X1, Y3 - Y1
+
+    -- Fixed-point deltas
+    local FDX12, FDY12 = DX12 * 16, DY12 * 16
+    local FDX23, FDY23 = DX23 * 16, DY23 * 16
+    local FDX31, FDY31 = DX31 * 16, DY31 * 16
+
+    -- Bounding rectangle
+    local minx = floor((min(X1, X2, X3) + 15) / 16)
+    local maxx = floor((max(X1, X2, X3) + 15) / 16)
+    local miny = floor((min(Y1, Y2, Y3) + 15) / 16)
+    local maxy = floor((max(Y1, Y2, Y3) + 15) / 16)
+
+    -- Half-edge constants
+    local C1 = DY12 * X1 - DX12 * Y1
+    local C2 = DY23 * X2 - DX23 * Y2
+    local C3 = DY31 * X3 - DX31 * Y3
+
+    -- Correct for fill convention (CCW winding)
+    if DY12 > 0 or (DY12 == 0 and DX12 < 0) then C1 = C1 + 1 end
+    if DY23 > 0 or (DY23 == 0 and DX23 < 0) then C2 = C2 + 1 end
+    if DY31 > 0 or (DY31 == 0 and DX31 < 0) then C3 = C3 + 1 end
+
+    -- Initialize edge values at top-left corner of bounding box
+    local CY1 = C1 + DX12 * (miny * 16) - DY12 * (minx * 16)
+    local CY2 = C2 + DX23 * (miny * 16) - DY23 * (minx * 16)
+    local CY3 = C3 + DX31 * (miny * 16) - DY31 * (minx * 16)
+
+    -- Loop over bounding box
+    for y = miny, maxy - 1 do
+        local CX1, CX2, CX3 = CY1, CY2, CY3
+
+        for x = minx, maxx - 1 do
+            if CX1 < 0 and CX2 < 0 and CX3 < 0 then -- CCW winding
+                callback(x,y,color,{
+                    pA={x=x1,y=y1},
+                    pB={x=x2,y=y2},
+                    pC={x=x3,y=y3}
+                })
+            end
+
+            CX1 = CX1 - FDY12
+            CX2 = CX2 - FDY23
+            CX3 = CX3 - FDY31
+        end
+
+        CY1 = CY1 + FDX12
+        CY2 = CY2 + FDX23
+        CY3 = CY3 + FDX31
+    end
 end

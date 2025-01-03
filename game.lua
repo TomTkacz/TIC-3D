@@ -41,6 +41,7 @@ function byteToUTF8(codepoint)
 end
 
 function round(n,d)
+    if d == 0 then return math.floor(n+0.5) end
 	return math.floor(n*math.pow(10,d))/math.pow(10,d)
 end
 
@@ -80,6 +81,103 @@ end
 
 function inRads(v)
     return v%(TWO_PI)
+end
+
+function line(x1, y1, x2, y2, color, callback)
+    if not callback then callback=pix end
+	local cx = x1
+	local cy = y1
+	local dx = math.abs(x2 - x1)
+	local dy =-math.abs(y2 - y1)
+	local sx = x1 < x2 and 1 or -1
+	local sy = y1 < y2 and 1 or -1
+
+	local err = dx + dy
+	local e2 = 0
+
+	while true do
+		callback(cx,cy,color)
+		if cx == x2 and cy == y2 then break end
+		e2 = 2 * err
+		if e2 >= dy then
+			err, cx = err + dy, cx + sx
+		end
+		if e2 <= dx then
+			err, cy = err + dx, cy + sy
+		end
+	end
+end
+
+-- function tri(x1,y1,x2,y2,x3,y3,color,callback)
+
+--     local floor = math.floor
+
+--     local function fillBottomFlatTriangle(x1,y1,x2,y2,x3,y3,color)
+--         local invslope1 = (x2 - x1) / (y2 - y1)
+--         local invslope2 = (x3 - x1) / (y3 - y1)
+--         local curx1 = x1
+--         local curx2 = x1
+    
+--         for scanlineY = y1, y2 do
+--             line(floor(curx1), scanlineY, floor(curx2), scanlineY, color, callback)
+--             curx1 = curx1 + invslope1
+--             curx2 = curx2 + invslope2
+--         end
+--     end
+
+--     local function fillTopFlatTriangle(x1,y1,x2,y2,x3,y3,color)
+--         local invslope1 = (x3 - x1) / (y3 - y1)
+--         local invslope2 = (x3 - x2) / (y3 - y2)
+--         local curx1 = x3
+--         local curx2 = x3
+    
+--         for scanlineY = y3, y1, -1 do
+--             line(floor(curx1), scanlineY, floor(curx2), scanlineY, color, callback)
+--             curx1 = curx1 - invslope1
+--             curx2 = curx2 - invslope2
+--         end
+--     end
+
+--     if y2 < y1 then x1,y1,x2,y2 = x2,y2,x1,y1 end
+--     if y3 < y1 then x1,y1,x3,y3 = x3,y3,x1,y1 end
+--     if y3 < y2 then x2,y2,x3,y3 = x3,y3,x2,y2 end
+
+--     if y2 == y3 then fillBottomFlatTriangle(x1,y1,x2,y2,x3,y3,color)
+--     elseif y1 == y2 then fillTopFlatTriangle(x1,y1,x2,y2,x3,y3,color)
+--     else
+--         local x4 = floor( x1 + ((y2-y1)/(y3-y1)) * (x3-x1) )
+--         local y4 = y2
+--         fillBottomFlatTriangle(x1,y1,x2,y2,x4,y4,color)
+--         fillTopFlatTriangle(x2,y2,x4,y4,x3,y3,color)
+--     end
+
+-- end
+
+function tri(x1,y1,x2,y2,x3,y3,color,callback)
+    local min,max = math.min,math.max
+    local minX,minY = min(x1,min(x2,x3)),min(y1,min(y2,y3))
+    local maxX,maxY = max(x1,max(x2,x3)),max(y1,max(y2,y3))
+    local v1 = {x=x2-x1,y=y2-y1}
+    local v2 = {x=x3-x1,y=y3-y1}
+
+    local function cross(v1,v2)
+        return (v1.x*v2.y) - (v1.y*v2.x)
+    end
+
+    for x=minX,maxX do
+        for y=minY,maxY do
+            local q = {x=x-x1,y=y-y1}
+            local s = cross(q,v2)/cross(v1,v2)
+            local t = cross(v1,q)/cross(v1,v2)
+
+            if s>=0 and t>=0 and s+t<=1 then
+                local payload = {minX=minX,minY=minY,maxX=maxX,maxY=maxY,s=s,t=t}
+                callback(x,y,color,payload)
+            end
+
+        end
+    end
+
 end
 
 -- [/TQ-Bundler: include.Utils]
@@ -972,6 +1070,7 @@ function Object3D._renderRoutines.mesh(self)
     end
 
     for triangleIndex=1,#mesh.triangles do
+    -- for triangleIndex=1,1 do
 
         local triangle = mesh.triangles[triangleIndex]
         local triangleVertices = triangle.vertices
@@ -995,15 +1094,33 @@ function Object3D._renderRoutines.mesh(self)
                 local t = resultantTriangles[i]
                 local insertIndex = 1
 
+                local depth = math.huge
+
                 for j=1,3 do
                     local vertex = t.vertices[j]
-                    local screenPos = vertex:toCameraTransform():toScreenSpace()
+                    local inCameraPos = vertex:toCameraTransform()
+                    local screenPos = inCameraPos:toScreenSpace()
                     triangleScreenValues[insertIndex] = screenPos.x
                     triangleScreenValues[insertIndex+1] = screenPos.y
                     insertIndex=insertIndex+2
+
+                    depth = math.min(depth,math.abs(inCameraPos.z))
                 end
 
                 triangleScreenValues[insertIndex] = 1+(triangleIndex%7)
+
+                -- idk what to do with this yet...
+                local function depthBufferCallback(x,y,color,info)
+                    local xf,yf = math.floor(x),math.floor(y)
+                    if xf>=1 and xf<= SCREEN_WIDTH and yf>=1 and yf<=SCREEN_HEIGHT and depth < Z_BUFFER[xf][yf] then
+                        Z_BUFFER[xf][yf] = depth
+                        pix(xf,yf,color)
+                        pix(info.minX+((info.maxX-info.minX)*info.s),info.maxY-((info.maxY-info.minY)*info.t),12)
+                    end
+                end
+
+                table.insert(triangleScreenValues,depthBufferCallback)
+
                 tri(unpack(triangleScreenValues))
                 -- triangleScreenValues[7] = 12
                 -- trib(table.unpack(triangleScreenValues))
@@ -1224,6 +1341,7 @@ PI=3.1415927
 TWO_PI=6.2831854
 PI_OVER_TWO=1.57079635
 WORLD_ORIGIN=Pos3D(0,0,0)
+Z_BUFFER={}
 
 -- SCENE COMPONENTS --
 
@@ -1258,6 +1376,15 @@ scene={
 }
 
 -- METHODS --
+
+function initializeZBuffer()
+	for col=1,SCREEN_WIDTH do
+		if not Z_BUFFER[col] then Z_BUFFER[col] = {} end
+		for row=1,SCREEN_HEIGHT do
+			Z_BUFFER[col][row] = math.huge
+		end
+	end
+end
 
 function calculateMeshOrigin(mesh)
 	local xAvg,yAvg,zAvg=0,0,0
@@ -1353,6 +1480,7 @@ function updateMouseInfo()
 end
 
 function renderScreen()
+	initializeZBuffer()
 	for _,obj in pairs(scene.activeObjects) do
 		obj:render()
 	end
@@ -1375,7 +1503,7 @@ function TIC()
 		camera:initalizeClippingPlanes()
 		camera:updateClippingPlanes()
 		loadObjects()
-		cube=Object3D("mesh","mips",Pos3D(0,0,3),Rot3D(0,0,0),Dir3D(0,0,1),1)
+		cube=Object3D("mesh","testtri",Pos3D(0,0,3),Rot3D(0,0,0),Dir3D(0,0,1),0.2)
 		--profiler.start()
 	end
 
@@ -1386,7 +1514,7 @@ function TIC()
 	if btn(2) then camera.pos=translate3D(camera.pos,camera.horizontalVector,0.1) end --right
 	if btn(3) then camera.pos=translate3D(camera.pos,camera.horizontalVector,-0.1) end --left
 
-	if btn(4) then scene.get(cube).rot:rotate(0.1,0,0.1) end
+	if btn(4) then scene.get(cube).rot:rotate(0,0.05,0) end
 
 	if gmouse.down then
 		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)
@@ -1442,7 +1570,8 @@ end
 -- 024:96d15ec8cd5f00145c66175c5959de0099ca96d15e18b34e00c2dad5fb5e39f7da7852d396d15ec8cd5f0099ca96d15e18b34e00145c66175c5959de31d452074a58b2a5dac1e6ddb657d23011dbe0365bc05c491066d231d452074a58b2a5da01bdd5c58cddd28bd1c1e6ddb657d23011db18475ad0844751355331d452074a58b2a5dae0365bc05c491066d201bdd5c58cddd28bd131d452074a58b2a5da69e151c58cddc2925f69e151c58cddc2925f31d452074a58b2a5da896dd7074a58928951896dd7074a5892895131d452074a58b2a5da18475ad08447513553e9bb59b657d2005bd869e151c58cddc2925f
 -- 025:896dd7074a5892895169e151c58cddc2925f18235ae49754e08ed601bdd5c58cddd28bd118235ae49754e08ed669e151c58cddc2925f0a1cd23589de01d055e9bb59b657d2005bd80a1cd23589de01d05569e151c58cddc2925fc1e6ddb657d23011db01bdd5c58cddd28bd1d12bda3589de21b8d101bdd5c58cddd28bd118235ae49754e08ed6d12bda3589de21b8d1e9bb59b657d2005bd8896dd7074a589289510912dec05c4900e2d9896dd7074a5892895118475ad084475135530912dec05c4900e2d918475ad0844751355308a9d8d026c508004e0912dec05c4900e2d908a9d8d026c508004e18475ad08447
 -- 026:513553e0365bc05c491066d2694a588028c6186ad618235ae49754e08ed60a1cd23589de01d05518235ae49754e08ed641e8df8028c60021ded12bda3589de21b8d141e8df8028c60021de18235ae49754e08ed60825d6f4dcd378905818235ae49754e08ed6694a588028c6186ad60825d6f4dcd37890587852d396d15ec8cd5f08a9d8d026c508004e0099ca96d15e18b34e08a9d8d026c508004ee0365bc05c491066d20099ca96d15e18b34e08a9d8d026c508004e7852d396d15ec8cd5f0912dec05c4900e2d90099ca96d15e18b34e41e8df8028c60021de00c2dad5fb5e39f7dac1e6ddb657d23011db41e8df
--- 027:8028c60021de0099ca96d15e18b34ee0365bc05c491066d2c1e6ddb657d23011db0099ca96d15e18b34e00c2dad5fb5e39f7da41e8df8028c60021de0825d6f4dcd37890587852d396d15ec8cd5f00c2dad5fb5e39f7da694a588028c6186ad6e9bb59b657d2005bd87852d396d15ec8cd5f694a588028c6186ad60912dec05c4900e2d97852d396d15ec8cd5fe9bb59b657d2005bd8c1e6ddb657d23011dbd12bda3589de21b8d141e8df8028c60021dee9bb59b657d2005bd8694a588028c6186ad60a1cd23589de01d055694a588028c6186ad600c2dad5fb5e39f7da0825d6f4dcd3789058000000000000000000
+-- 027:8028c60021de0099ca96d15e18b34ee0365bc05c491066d2c1e6ddb657d23011db0099ca96d15e18b34e00c2dad5fb5e39f7da41e8df8028c60021de0825d6f4dcd37890587852d396d15ec8cd5f00c2dad5fb5e39f7da694a588028c6186ad6e9bb59b657d2005bd87852d396d15ec8cd5f694a588028c6186ad60912dec05c4900e2d97852d396d15ec8cd5fe9bb59b657d2005bd8c1e6ddb657d23011dbd12bda3589de21b8d141e8df8028c60021dee9bb59b657d2005bd8694a588028c6186ad60a1cd23589de01d055694a588028c6186ad600c2dad5fb5e39f7da0825d6f4dcd3789058475637474727960000
+-- 028:00000010000000003054472861d300000088145d511bdd0000005947d54903d700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 -- </MAP>
 
 -- <WAVES>

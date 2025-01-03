@@ -44,14 +44,6 @@ function Object3D._renderRoutines.mesh(self)
     local mesh = scene.loadedObjects[self.meshID]
     self.origin = self.pos
 
-    -- local function shallowCopyTable(orig)
-    --     local copy = {}
-    --     for i=1, #orig do
-    --         copy[i] = orig[i]
-    --     end
-    --     return copy
-    -- end
-
     local function getResultantTriangles(verticesTable)
 
         local resultantTriangles,newBorderVertices = {},{}
@@ -129,18 +121,49 @@ function Object3D._renderRoutines.mesh(self)
                 local t = resultantTriangles[i]
                 local insertIndex = 1
 
+                local depths = {}
+
                 for j=1,3 do
                     local vertex = t.vertices[j]
-                    local screenPos = vertex:toCameraTransform():toScreenSpace()
+                    local inCameraPos = vertex:toCameraTransform()
+                    local screenPos = inCameraPos:toScreenSpace()
                     triangleScreenValues[insertIndex] = screenPos.x
                     triangleScreenValues[insertIndex+1] = screenPos.y
                     insertIndex=insertIndex+2
+
+                    table.insert(depths,math.abs(inCameraPos.z))
                 end
 
                 triangleScreenValues[insertIndex] = 1+(triangleIndex%7)
-                tri(unpack(triangleScreenValues))
-                -- triangleScreenValues[7] = 12
-                -- trib(table.unpack(triangleScreenValues))
+
+                local function depthBufferCallback(x,y,color,info)
+
+                    local pA,pB,pC = info.pA,info.pB,info.pC
+                    local abs = math.abs
+
+                    local areaABC = abs( (pA.x*(pB.y-pC.y)) + (pB.x*(pC.y-pA.y)) + (pC.x*(pA.y-pB.y)) ) / 2
+                    local areaPBC = abs( (x*(pB.y-pC.y)) + (pB.x*(pC.y-y)) + (pC.x*(y-pB.y)) ) / 2
+                    local areaPCA = abs( (pA.x*(y-pC.y)) + (x*(pC.y-pA.y)) + (pC.x*(pA.y-y)) ) / 2
+                    local areaPAB = abs( (pA.x*(pB.y-y)) + (pB.x*(y-pA.y)) + (x*(pA.y-pB.y)) ) / 2
+
+                    local alpha = areaPBC / areaABC
+                    local beta = areaPCA / areaABC
+                    local gamma = areaPAB / areaABC
+
+                    local depth = (alpha*depths[1]) + (beta*depths[2]) + (gamma*depths[3])
+
+                    if x>=1 and x<=SCREEN_WIDTH and y>=1 and y<=SCREEN_HEIGHT and depth < Z_BUFFER[x][y] then
+
+                        Z_BUFFER[x][y] = depth
+                        pix(x,y,color)
+
+                    end
+
+                end
+
+                table.insert(triangleScreenValues,depthBufferCallback)
+
+                triCulled(unpack(triangleScreenValues))
 
             end
 
