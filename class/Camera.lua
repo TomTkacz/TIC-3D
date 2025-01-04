@@ -61,7 +61,7 @@ function Camera.mt.__call(self,pos,rot,dir)
     end
 
     function s:updateVectors()
-        local horizontalX,horizontalZ = math.cos(PI-self.rot.y),math.sin(PI-self.rot.y)
+        local horizontalX,horizontalZ = cosq(PI-self.rot.y),sinq(PI-self.rot.y)
         self.horizontalVector,self.verticalVector = Dir3D(horizontalX,0,horizontalZ),Dir3D(0,1,0)
     end
 

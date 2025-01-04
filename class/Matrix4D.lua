@@ -38,8 +38,8 @@ function Matrix4D.mt.__call(self,x,y,z,w)
 	end
 
 	function s:applyRotation(x,y,z)
-		local sin = math.sin
-		local cos = math.cos
+		local sin = sinq
+		local cos = cosq
 		local sinx,cosx = sin(x),cos(x)
 		local siny,cosy = sin(y),cos(y)
 		local sinz,cosz = sin(z),cos(z)
@@ -64,18 +64,19 @@ function Matrix4D.mt.__call(self,x,y,z,w)
 	end
 
 	function s:applyAxisAngleRotation(dir,angle)
-		local c=math.cos(angle)
-		local s=math.sin(angle)
+		local c=cosq(angle)
+		local s=sinq(angle)
 		local C=1-c
 		local x=dir.x
 		local y=dir.y
 		local z=dir.z
 		local Q=Matrix(4,4)
+		local xC,yC,zC,xs,ys,zs = x*C,y*C,z*C,x*s,y*s,z*s
 		Q.values={
-			{ x*x*C+c,   x*y*C-z*s, x*z*C+y*s, 0 },
-			{ y*x*C+z*s, y*y*C+c,   y*z*C-x*s, 0 },
-			{ z*x*C-y*s, z*y*C+x*s, z*z*C+c,   0 },
-			{ 0,         0,         0,         1 }
+			{ x*xC+c,  y*xC-zs, z*xC+ys, 0 },
+			{ y*xC+zs, y*yC+c,  z*yC-xs, 0 },
+			{ z*xC-ys, z*yC+xs, z*zC+c,  0 },
+			{ 0,       0,       0,       1 }
 		}
 		self.values = (Q*self).values
 	end

@@ -5,6 +5,7 @@
 -- license: MIT License
 -- script:  lua
 
+include "include.Lookup"
 include "include.Utils"
 include "include.LoadObjects"
 include "class.Camera"
@@ -30,6 +31,7 @@ TWO_PI=6.2831854
 PI_OVER_TWO=1.57079635
 WORLD_ORIGIN=Pos3D(0,0,0)
 Z_BUFFER={}
+DEBUG=false
 
 -- SCENE COMPONENTS --
 
@@ -191,8 +193,8 @@ function TIC()
 		camera:initalizeClippingPlanes()
 		camera:updateClippingPlanes()
 		loadObjects()
-		cube=Object3D("mesh","mips",Pos3D(0,-1.2,4),Rot3D(0,0,0),Dir3D(0,0,1),0.2)
-		--profiler.start()
+		cube=Object3D("mesh","mips",Pos3D(0,-1,5),Rot3D(0,0,0),Dir3D(0,0,1),0.2)
+		if DEBUG then profiler.start() end
 	end
 
 	cls(0)
@@ -202,7 +204,9 @@ function TIC()
 	if btn(2) then camera.pos=translate3D(camera.pos,camera.horizontalVector,0.1) end --right
 	if btn(3) then camera.pos=translate3D(camera.pos,camera.horizontalVector,-0.1) end --left
 
-	if btn(4) then scene.get(cube).rot:rotate(0,0.1,0) end
+	if btn(4) then
+		scene.get(cube).rot:rotate(0,0.1,0)
+	end
 
 	if gmouse.down then
 		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)
@@ -214,11 +218,11 @@ function TIC()
 
 	renderScreen()
 
-	-- if t==10 then
-	-- 	profiler.stop()
-	-- 	trace(profiler.report(20))
-	-- 	exit()
-	-- end
+	if DEBUG and t==10 then
+		profiler.stop()
+		trace(profiler.report(20))
+		exit()
+	end
 
 	if t%fpsInterval==0 then
 		frameEndTimeMilliseconds=time()

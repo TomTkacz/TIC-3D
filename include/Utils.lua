@@ -89,9 +89,9 @@ function triCulled(x1, y1, x2, y2, x3, y3, color, callback)
     local DX31, DY31 = X3 - X1, Y3 - Y1
 
     -- Fixed-point deltas
-    local FDX12, FDY12 = DX12 * 16, DY12 * 16
-    local FDX23, FDY23 = DX23 * 16, DY23 * 16
-    local FDX31, FDY31 = DX31 * 16, DY31 * 16
+    local FDX12, FDY12 = DX12 << 4, DY12 << 4
+    local FDX23, FDY23 = DX23 << 4, DY23 << 4
+    local FDX31, FDY31 = DX31 << 4, DY31 << 4
 
     -- Bounding rectangle
     local minx = floor((min(X1, X2, X3) + 15) / 16)
@@ -110,9 +110,9 @@ function triCulled(x1, y1, x2, y2, x3, y3, color, callback)
     if DY31 > 0 or (DY31 == 0 and DX31 < 0) then C3 = C3 + 1 end
 
     -- Initialize edge values at top-left corner of bounding box
-    local CY1 = C1 + DX12 * (miny * 16) - DY12 * (minx * 16)
-    local CY2 = C2 + DX23 * (miny * 16) - DY23 * (minx * 16)
-    local CY3 = C3 + DX31 * (miny * 16) - DY31 * (minx * 16)
+    local CY1 = C1 + DX12 * (miny << 4) - DY12 * (minx << 4)
+    local CY2 = C2 + DX23 * (miny << 4) - DY23 * (minx << 4)
+    local CY3 = C3 + DX31 * (miny << 4) - DY31 * (minx << 4)
 
     -- Loop over bounding box
     for y = miny, maxy - 1 do
