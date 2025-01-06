@@ -3,16 +3,17 @@ Matrix.mt={}
 Matrix.mti={}
 
 function Matrix.mt.__call(self,rows,cols)
-	s={rows=rows,cols=cols,values={}}
-
-	for row=1,rows do
-		s.values[row]={}
-		for col=1,cols do
-			s.values[row][col]=0
-		end
-	end
-	setmetatable(s,Matrix.mti)
-	return s
+    local values = {}
+    for row = 1, rows do
+        local rowValues = {}
+        for col = 1, cols do
+            rowValues[col] = 0
+        end
+        values[row] = rowValues
+    end
+    local s = { rows = rows, cols = cols, values = values }
+    setmetatable(s, Matrix.mti)
+    return s
 end
 
 function Matrix.mti.__index(self,i)

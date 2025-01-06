@@ -141,10 +141,14 @@ function Object3D._renderRoutines.mesh(self)
                     local pA,pB,pC = info.pA,info.pB,info.pC
                     local abs = math.abs
 
-                    local areaABC = abs( (pA.x*(pB.y-pC.y)) + (pB.x*(pC.y-pA.y)) + (pC.x*(pA.y-pB.y)) ) / 2
-                    local areaPBC = abs( (x*(pB.y-pC.y)) + (pB.x*(pC.y-y)) + (pC.x*(y-pB.y)) ) / 2
-                    local areaPCA = abs( (pA.x*(y-pC.y)) + (x*(pC.y-pA.y)) + (pC.x*(pA.y-y)) ) / 2
-                    local areaPAB = abs( (pA.x*(pB.y-y)) + (pB.x*(y-pA.y)) + (x*(pA.y-pB.y)) ) / 2
+                    local deltayBC = pB.y-pC.y
+                    local deltayCA = pC.y-pA.y
+                    local deltayAB = pA.y-pB.y
+
+                    local areaABC = abs( (pA.x*(deltayBC)) + (pB.x*(deltayCA)) + (pC.x*(deltayAB)) ) / 2
+                    local areaPBC = abs( (x*(deltayBC)) + (pB.x*(pC.y-y)) + (pC.x*(y-pB.y)) ) / 2
+                    local areaPCA = abs( (pA.x*(y-pC.y)) + (x*(deltayCA)) + (pC.x*(pA.y-y)) ) / 2
+                    local areaPAB = abs( (pA.x*(pB.y-y)) + (pB.x*(y-pA.y)) + (x*(deltayAB)) ) / 2
 
                     local alpha = areaPBC / areaABC
                     local beta = areaPCA / areaABC

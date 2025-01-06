@@ -31,7 +31,7 @@ TWO_PI=6.2831854
 PI_OVER_TWO=1.57079635
 WORLD_ORIGIN=Pos3D(0,0,0)
 Z_BUFFER={}
-DEBUG=false
+DEBUG=true
 
 -- SCENE COMPONENTS --
 
@@ -68,10 +68,12 @@ scene={
 -- METHODS --
 
 function initializeZBuffer()
+	local huge = math.huge
 	for col=1,SCREEN_WIDTH do
 		if not Z_BUFFER[col] then Z_BUFFER[col] = {} end
+		local zcol = Z_BUFFER[col]
 		for row=1,SCREEN_HEIGHT do
-			Z_BUFFER[col][row] = math.huge
+			zcol[row] = huge
 		end
 	end
 end

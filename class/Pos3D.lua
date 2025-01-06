@@ -3,8 +3,7 @@ Pos3D.mt={}
 Pos3D.mti={}
 
 function Pos3D.mt.__call(self,x,y,z,w)
-	local s={x=x,y=y,z=z,w=1}
-	if w then s.w=w end
+	local s={x=x,y=y,z=z,w=(w or 1)}
 	s.matrix=Matrix4D.fromVector3D(s)
 
 	function s:updateMatrix()
@@ -65,12 +64,16 @@ function Pos3D.mt.__call(self,x,y,z,w)
 	function s:toCameraTransform()
 
 		local m = self.matrix:getCopy()
+		local pos = camera.pos
+		local rot = camera.rot
+		local posx,posy,posz=pos.x,pos.y,pos.z
+		local rotx,roty,rotz=rot.x,rot.y,rot.z
 
 		-- translate/rotate about the camera
-		m:applyTranslation(-camera.pos.x,-camera.pos.y,-camera.pos.z)
-		m:applyAxisAngleRotation(Dir3D(1,0,0),-camera.rot.x)
-		m:applyAxisAngleRotation(Dir3D(0,1,0),PI-camera.rot.y)
-		m:applyAxisAngleRotation(Dir3D(0,0,1),-camera.rot.z)
+		m:applyTranslation(-posx,-posy,-posz)
+		m:applyAxisAngleRotation(Dir3D(1,0,0),-rotx)
+		m:applyAxisAngleRotation(Dir3D(0,1,0),PI-roty)
+		m:applyAxisAngleRotation(Dir3D(0,0,1),-rotz)
 
 		return Pos3D.fromMatrix4D(m)
 

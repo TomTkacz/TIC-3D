@@ -45,22 +45,39 @@ function Matrix4D.mt.__call(self,x,y,z,w)
 		local sinz,cosz = sin(z),cos(z)
 		local rx,ry,rz=Matrix4D.rotationMatrixX,Matrix4D.rotationMatrixY,Matrix4D.rotationMatrixZ
 
-		rx[2][2] = cosx
-		rx[2][3] = -sinx
-		rx[3][2] = sinx
-		rx[3][3] = cosx
+		local Q = Matrix(4,4)
+		Q.values = {
+			{1,0,0,0},
+			{0,1,0,0},
+			{0,0,1,0},
+			{0,0,0,1}
+		}
 
-		ry[1][1] = cosy
-		ry[1][3] = siny
-		ry[3][1] = -siny
-		ry[3][3] = cosy
+		if x ~= 0 then
+			rx[2][2] = cosx
+			rx[2][3] = -sinx
+			rx[3][2] = sinx
+			rx[3][3] = cosx
+			Q.values = (Q*rx).values
+		end
 
-		rz[1][1] = cosz
-		rz[1][2] = -sinz
-		rz[2][1] = sinz
-		rz[2][2] = cosz
+		if y ~= 0 then
+			ry[1][1] = cosy
+			ry[1][3] = siny
+			ry[3][1] = -siny
+			ry[3][3] = cosy
+			Q.values = (Q*ry).values
+		end
 
-		self.values = ((rx*ry*rz)*self).values
+		if z ~= 0 then
+			rz[1][1] = cosz
+			rz[1][2] = -sinz
+			rz[2][1] = sinz
+			rz[2][2] = cosz
+			Q.values = (Q*rz).values
+		end
+
+		self.values = (Q*self).values
 	end
 
 	function s:applyAxisAngleRotation(dir,angle)
@@ -72,6 +89,7 @@ function Matrix4D.mt.__call(self,x,y,z,w)
 		local z=dir.z
 		local Q=Matrix(4,4)
 		local xC,yC,zC,xs,ys,zs = x*C,y*C,z*C,x*s,y*s,z*s
+		
 		Q.values={
 			{ x*xC+c,  y*xC-zs, z*xC+ys, 0 },
 			{ y*xC+zs, y*yC+c,  z*yC-xs, 0 },
@@ -104,7 +122,8 @@ function Matrix4D.mt.__call(self,x,y,z,w)
 	end
 
 	function s:getCanonical()
-		return Matrix4D(self[1][1]/self[4][1],self[2][1]/self[4][1],self[3][1]/self[4][1],1)
+		local w = self[4][1]
+		return Matrix4D(self[1][1]/w,self[2][1]/w,self[3][1]/w,1)
 	end
 
 	function s:toLocalTransform(origin,rot,scale)
