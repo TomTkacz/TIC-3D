@@ -12,8 +12,7 @@ function Matrix.mt.__call(self,rows,cols)
         values[row] = rowValues
     end
     local s = { rows = rows, cols = cols, values = values }
-    setmetatable(s, Matrix.mti)
-    return s
+    return setmetatable(s, Matrix.mti)
 end
 
 function Matrix.mti.__index(self,i)
@@ -57,3 +56,17 @@ function Matrix.mti.__mul(self,m2)
 end
 
 setmetatable(Matrix,Matrix.mt)
+
+Matrix.M44 = Matrix(4,4)
+Matrix.M41 = Matrix(4,1)
+
+function Matrix.bindLocalMatrixToFunction(func,rows,cols,initialValuesTable)
+	local m = Matrix(rows,cols)
+	local unpack = table.unpack
+	function transform(...)
+		local params={...}
+		if initialValuesTable then m.values = initialValuesTable end
+		return func(m,unpack(params))
+	end
+	return transform
+end

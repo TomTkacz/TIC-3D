@@ -48,8 +48,7 @@ function Object3D._renderRoutines.mesh(self)
 
         local resultantTriangles,newBorderVertices = {},{}
         local borderVertices = verticesTable
-        local move = table.move
-        local abs = math.abs
+        local move,abs = table.move,math.abs
 
         for planeIndex=1,#camera.clippingPlanes do
 
