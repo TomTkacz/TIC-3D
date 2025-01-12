@@ -49,6 +49,9 @@ function viewport:updateFocalDist()
 end
 viewport:updateFocalDist()
 
+HalfViewportWidth,HalfViewportHeight = viewport.size.w/2,viewport.size.h/2
+ScreenWidthScale,ScreenHeightScale = SCREEN_WIDTH/viewport.size.w,SCREEN_HEIGHT/viewport.size.h
+
 light={
 	pos=Pos3D(-5,6,5)
 }

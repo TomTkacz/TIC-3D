@@ -22,12 +22,6 @@ Matrix4D.rotationMatrixZ.values = {
 	{ 0, 0, 1, 0},
 	{ 0, 0, 0, 1}
 }
-Matrix4D.screenProjectionMatrix.values = {
-	{"viewportfocaldist",0,0,0},
-	{0,"viewportfocaldist",0,0},
-	{0,0,1,0},
-	{0,0,1,0}
-}
 
 function Matrix4D.mt.__call(self,x,y,z,w)
 	local s=Matrix(4,1)
@@ -136,6 +130,28 @@ do
 		{0,0,0,1}
 	})
 
+	local function toScreenSpace(m,self)
+	
+		local viewportWidth,viewportHeight,viewportFocalDist = viewport.size.w,viewport.size.h,viewport._focalDist
+		local values = m.values
+		values[1][1] = viewportFocalDist
+		values[2][2] = viewportFocalDist
+
+		local result = Matrix4D.fromMatrix(m*self):getCanonical().values
+	
+		result[1][1] = ((result[1][1]+viewportWidth/2)*SCREEN_WIDTH)/viewportWidth
+		result[2][1] = ((result[2][1]+viewportHeight/2)*SCREEN_HEIGHT)/viewportHeight
+	
+		return Pos2D(result[1][1],result[2][1])
+	
+	end
+	Matrix4D.toScreenSpace = Matrix.bindLocalMatrixToFunction(toScreenSpace,4,4,{
+		{0,0,0,0},
+		{0,0,0,0},
+		{0,0,1,0},
+		{0,0,1,0}
+	})
+
 end
 
 function Matrix4D:getCanonical()
@@ -151,20 +167,6 @@ function Matrix4D:toLocalTransform(origin,rot,scale)
 	return Pos3D(m[1][1],m[2][1],m[3][1],m[4][1])
 end
 
-function Matrix4D:toScreenSpace()
-
-	local projectionMatrix = Matrix4D.screenProjectionMatrix
-
-	local result = Matrix4D.fromMatrix(projectionMatrix*self):getCanonical().values
-	local viewportWidth,viewportHeight = viewport.size.w,viewport.size.h
-
-	result[1][1] = ((result[1][1]+viewportWidth/2)*SCREEN_WIDTH)/viewportWidth
-	result[2][1] = ((result[2][1]+viewportHeight/2)*SCREEN_HEIGHT)/viewportHeight
-
-	return Pos2D(result[1][1],result[2][1])
-
-end
-
 function Matrix4D.fromVector3D(v)
 	return Matrix4D(v.x,v.y,v.z,v.w)
 end
@@ -177,7 +179,6 @@ function Matrix4D.mti.__index(self,i)
 	return self.values[i] ~= nil and self.values[i] or Matrix4D[i]
 end
 
--- Matrix4D.mti.__index = Matrix.mti.__index
 Matrix4D.mti.__add = Matrix.mti.__add
 Matrix4D.mti.__sub = Matrix.mti.__sub
 Matrix4D.mti.__mul = Matrix.mti.__mul
