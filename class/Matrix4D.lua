@@ -160,11 +160,27 @@ function Matrix4D:getCanonical()
 end
 
 function Matrix4D:toLocalTransform(origin,rot,scale)
-	local m=self:getCopy()
-	m:applyScaleFactor(scale,scale,scale)
-	m:applyRotation(rot.x,rot.y,rot.z)
-	m:applyTranslation(origin.x,origin.y,origin.z)
-	return Pos3D(m[1][1],m[2][1],m[3][1],m[4][1])
+
+	local values = self.values
+	local x,y,z,w = values[1][1],values[2][1],values[3][1],values[4][1]
+
+	local sinq,cosq = sinq,cosq -- local references to external functions
+	
+	local sx,sy,sz = scale,scale,scale
+	local tx,ty,tz = origin.x,origin.y,origin.z
+	
+	local sin_rx,cos_rx = sinq(rot.x),cosq(rot.x)
+	local sin_ry,cos_ry = sinq(rot.y),cosq(rot.y)
+	local sin_rz,cos_rz = sinq(rot.z),cosq(rot.z)
+
+	local sxx,syy,szz = sx*x,sy*y,sz*z
+
+	local finalX = cos_ry*cos_rz*sxx + cos_ry*-sin_rz*syy + sin_ry*szz + tx*w
+	local finalY = (-sin_rx*-sin_ry*cos_rz+cos_rx*sin_rz)*sxx + (-sin_rx*-sin_ry*-sin_rz+cos_rx*cos_rz)*syy + -sin_rx*cos_ry*szz + ty*w
+	local finalZ = (cos_rx*-sin_ry*cos_rz+sin_rx*sin_rz)*sxx + (cos_rx*-sin_ry*-sin_rz+sin_rx*cos_rz)*syy + cos_rx*cos_ry*szz + tz*w
+
+	return Pos3D(finalX,finalY,finalZ,w)
+
 end
 
 function Matrix4D.fromVector3D(v)

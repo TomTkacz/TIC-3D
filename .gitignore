@@ -4,3 +4,6 @@ build.lua
 assets/meshdata/*
 run.bat
 todo.txt
+out.txt
+test.lua
+simplify.py

@@ -10,6 +10,26 @@
 -- license: MIT License
 -- script:  lua
 
+-- [TQ-Bundler: include.Lookup]
+
+SIN = {
+    0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.11, 0.12, 0.129, 0.139, 0.149, 0.159, 0.169, 0.179, 0.189, 0.198, 0.208, 0.218, 0.228, 0.237, 0.247, 0.257, 0.266, 0.276, 0.286, 0.295, 0.305, 0.314, 0.324, 0.333, 0.343, 0.352, 0.361, 0.371, 0.38, 0.389, 0.398, 0.407, 0.416, 0.426, 0.435, 0.444, 0.452, 0.461, 0.47, 0.479, 0.488, 0.496, 0.505, 0.514, 0.522, 0.531, 0.539, 0.547, 0.556, 0.564, 0.572, 0.58, 0.589, 0.597, 0.605, 0.613, 0.62, 0.628, 0.636, 0.644, 0.651, 0.659, 0.666, 0.674, 0.681, 0.688, 0.696, 0.703, 0.71, 0.717, 0.724, 0.731, 0.737, 0.744, 0.751, 0.757, 0.764, 0.77, 0.776, 0.783, 0.789, 0.795, 0.801, 0.807, 0.813, 0.819, 0.824, 0.83, 0.835, 0.841, 0.846, 0.852, 0.857, 0.862, 0.867, 0.872, 0.877, 0.881, 0.886, 0.891, 0.895, 0.9, 0.904, 0.908, 0.912, 0.916, 0.92, 0.924, 0.928, 0.932, 0.935, 0.939, 0.942, 0.945, 0.949, 0.952, 0.955, 0.958, 0.96, 0.963, 0.966, 0.968, 0.971, 0.973, 0.975, 0.978, 0.98, 0.982, 0.983, 0.985, 0.987, 0.988, 0.99, 0.991, 0.993, 0.994, 0.995, 0.996, 0.997, 0.997, 0.998, 0.999, 0.999, 0.999, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.999, 0.999, 0.998, 0.998, 0.997, 0.996, 0.995, 0.994, 0.993, 0.992, 0.991, 0.989, 0.988, 0.986, 0.984, 0.983, 0.981, 0.979, 0.976, 0.974, 0.972, 0.97, 0.967, 0.965, 0.962, 0.959, 0.956, 0.953, 0.95, 0.947, 0.944, 0.94, 0.937, 0.933, 0.93, 0.926, 0.922, 0.918, 0.914, 0.91, 0.906, 0.902, 0.897, 0.893, 0.888, 0.884, 0.879, 0.874, 0.869, 0.864, 0.859, 0.854, 0.849, 0.844, 0.838, 0.833, 0.827, 0.821, 0.816, 0.81, 0.804, 0.798, 0.792, 0.786, 0.78, 0.773, 0.767, 0.76, 0.754, 0.747, 0.741, 0.734, 0.727, 0.72, 0.713, 0.706, 0.699, 0.692, 0.685, 0.677, 0.67, 0.663, 0.655, 0.647, 0.64, 0.632, 0.624, 0.616, 0.609, 0.601, 0.593, 0.585, 0.576, 0.568, 0.56, 0.552, 0.543, 0.535, 0.526, 0.518, 0.509, 0.501, 0.492, 0.483, 0.475, 0.466, 0.457, 0.448, 0.439, 0.43, 0.421, 0.412, 0.403, 0.394, 0.384, 0.375, 0.366, 0.357, 0.347, 0.338, 0.328, 0.319, 0.309, 0.3, 0.29, 0.281, 0.271, 0.262, 0.252, 0.242, 0.233, 0.223, 0.213, 0.203, 0.194, 0.184, 0.174, 0.164, 0.154, 0.144, 0.134, 0.125, 0.115, 0.105, 0.095, 0.085, 0.075, 0.065, 0.055, 0.045, 0.035, 0.025, 0.015, 0.005, -0.005, -0.015, -0.025, -0.035, -0.045, -0.055, -0.065, -0.075, -0.085, -0.095, -0.105, -0.115, -0.125, -0.134, -0.144, -0.154, -0.164, -0.174, -0.184, -0.194, -0.203, -0.213, -0.223, -0.233, -0.242, -0.252, -0.262, -0.271, -0.281, -0.29, -0.3, -0.309, -0.319, -0.328, -0.338, -0.347, -0.357, -0.366, -0.375, -0.384, -0.394, -0.403, -0.412, -0.421, -0.43, -0.439, -0.448, -0.457, -0.466, -0.475, -0.483, -0.492, -0.501, -0.509, -0.518, -0.526, -0.535, -0.543, -0.552, -0.56, -0.568, -0.576, -0.585, -0.593, -0.601, -0.609, -0.616, -0.624, -0.632, -0.64, -0.647, -0.655, -0.663, -0.67, -0.677, -0.685, -0.692, -0.699, -0.706, -0.713, -0.72, -0.727, -0.734, -0.741, -0.747, -0.754, -0.76, -0.767, -0.773, -0.78, -0.786, -0.792, -0.798, -0.804, -0.81, -0.816, -0.821, -0.827, -0.833, -0.838, -0.844, -0.849, -0.854, -0.859, -0.864, -0.869, -0.874, -0.879, -0.884, -0.888, -0.893, -0.897, -0.902, -0.906, -0.91, -0.914, -0.918, -0.922, -0.926, -0.93, -0.933, -0.937, -0.94, -0.944, -0.947, -0.95, -0.953, -0.956, -0.959, -0.962, -0.965, -0.967, -0.97, -0.972, -0.974, -0.976, -0.979, -0.981, -0.983, -0.984, -0.986, -0.988, -0.989, -0.991, -0.992, -0.993, -0.994, -0.995, -0.996, -0.997, -0.998, -0.998, -0.999, -0.999, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -0.999, -0.999, -0.999, -0.998, -0.997, -0.997, -0.996, -0.995, -0.994, -0.993, -0.991, -0.99, -0.988, -0.987, -0.985, -0.983, -0.982, -0.98, -0.978, -0.975, -0.973, -0.971, -0.968, -0.966, -0.963, -0.96, -0.958, -0.955, -0.952, -0.949, -0.945, -0.942, -0.939, -0.935, -0.932, -0.928, -0.924, -0.92, -0.916, -0.912, -0.908, -0.904, -0.9, -0.895, -0.891, -0.886, -0.881, -0.877, -0.872, -0.867, -0.862, -0.857, -0.852, -0.846, -0.841, -0.835, -0.83, -0.824, -0.819, -0.813, -0.807, -0.801, -0.795, -0.789, -0.783, -0.776, -0.77, -0.764, -0.757, -0.751, -0.744, -0.737, -0.731, -0.724, -0.717, -0.71, -0.703, -0.696, -0.688, -0.681, -0.674, -0.666, -0.659, -0.651, -0.644, -0.636, -0.628, -0.62, -0.613, -0.605, -0.597, -0.589, -0.58, -0.572, -0.564, -0.556, -0.547, -0.539, -0.531, -0.522, -0.514, -0.505, -0.496, -0.488, -0.479, -0.47, -0.461, -0.452, -0.444, -0.435, -0.426, -0.416, -0.407, -0.398, -0.389, -0.38, -0.371, -0.361, -0.352, -0.343, -0.333, -0.324, -0.314, -0.305, -0.295, -0.286, -0.276, -0.266, -0.257, -0.247, -0.237, -0.228, -0.218, -0.208, -0.198, -0.189, -0.179, -0.169, -0.159, -0.149, -0.139, -0.129, -0.12, -0.11, -0.1, -0.09, -0.08, -0.07, -0.06, -0.05, -0.04, -0.03, -0.02, -0.01
+}
+
+COS = {
+    1.0, 1.0, 1.0, 1.0, 0.999, 0.999, 0.998, 0.998, 0.997, 0.996, 0.995, 0.994, 0.993, 0.992, 0.99, 0.989, 0.987, 0.986, 0.984, 0.982, 0.98, 0.978, 0.976, 0.974, 0.971, 0.969, 0.966, 0.964, 0.961, 0.958, 0.955, 0.952, 0.949, 0.946, 0.943, 0.94, 0.936, 0.932, 0.929, 0.925, 0.921, 0.917, 0.913, 0.909, 0.905, 0.901, 0.896, 0.892, 0.887, 0.883, 0.878, 0.873, 0.868, 0.863, 0.858, 0.853, 0.848, 0.842, 0.837, 0.831, 0.826, 0.82, 0.814, 0.808, 0.803, 0.797, 0.79, 0.784, 0.778, 0.772, 0.765, 0.759, 0.752, 0.746, 0.739, 0.732, 0.725, 0.718, 0.712, 0.704, 0.697, 0.69, 0.683, 0.676, 0.668, 0.661, 0.653, 0.646, 0.638, 0.63, 0.622, 0.615, 0.607, 0.599, 0.591, 0.583, 0.574, 0.566, 0.558, 0.55, 0.541, 0.533, 0.524, 0.516, 0.507, 0.499, 0.49, 0.481, 0.472, 0.464, 0.455, 0.446, 0.437, 0.428, 0.419, 0.41, 0.4, 0.391, 0.382, 0.373, 0.364, 0.354, 0.345, 0.335, 0.326, 0.317, 0.307, 0.298, 0.288, 0.278, 0.269, 0.259, 0.25, 0.24, 0.23, 0.22, 0.211, 0.201, 0.191, 0.181, 0.171, 0.162, 0.152, 0.142, 0.132, 0.122, 0.112, 0.102, 0.092, 0.082, 0.072, 0.062, 0.052, 0.042, 0.032, 0.022, 0.012, 0.002, -0.007, -0.017, -0.027, -0.037, -0.047, -0.057, -0.067, -0.077, -0.087, -0.097, -0.107, -0.117, -0.127, -0.137, -0.147, -0.157, -0.167, -0.176, -0.186, -0.196, -0.206, -0.216, -0.225, -0.235, -0.245, -0.254, -0.264, -0.274, -0.283, -0.293, -0.302, -0.312, -0.321, -0.331, -0.34, -0.35, -0.359, -0.368, -0.377, -0.387, -0.396, -0.405, -0.414, -0.423, -0.432, -0.441, -0.45, -0.459, -0.468, -0.477, -0.486, -0.494, -0.503, -0.511, -0.52, -0.529, -0.537, -0.545, -0.554, -0.562, -0.57, -0.578, -0.587, -0.595, -0.603, -0.611, -0.618, -0.626, -0.634, -0.642, -0.649, -0.657, -0.664, -0.672, -0.679, -0.687, -0.694, -0.701, -0.708, -0.715, -0.722, -0.729, -0.736, -0.742, -0.749, -0.756, -0.762, -0.769, -0.775, -0.781, -0.787, -0.793, -0.8, -0.805, -0.811, -0.817, -0.823, -0.829, -0.834, -0.84, -0.845, -0.85, -0.855, -0.861, -0.866, -0.871, -0.875, -0.88, -0.885, -0.89, -0.894, -0.898, -0.903, -0.907, -0.911, -0.915, -0.919, -0.923, -0.927, -0.931, -0.934, -0.938, -0.941, -0.945, -0.948, -0.951, -0.954, -0.957, -0.96, -0.963, -0.965, -0.968, -0.97, -0.973, -0.975, -0.977, -0.979, -0.981, -0.983, -0.985, -0.986, -0.988, -0.99, -0.991, -0.992, -0.993, -0.995, -0.996, -0.996, -0.997, -0.998, -0.998, -0.999, -0.999, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -0.999, -0.999, -0.998, -0.998, -0.997, -0.996, -0.996, -0.995, -0.993, -0.992, -0.991, -0.99, -0.988, -0.986, -0.985, -0.983, -0.981, -0.979, -0.977, -0.975, -0.973, -0.97, -0.968, -0.965, -0.963, -0.96, -0.957, -0.954, -0.951, -0.948, -0.945, -0.941, -0.938, -0.934, -0.931, -0.927, -0.923, -0.919, -0.915, -0.911, -0.907, -0.903, -0.898, -0.894, -0.89, -0.885, -0.88, -0.875, -0.871, -0.866, -0.861, -0.855, -0.85, -0.845, -0.84, -0.834, -0.829, -0.823, -0.817, -0.811, -0.805, -0.8, -0.793, -0.787, -0.781, -0.775, -0.769, -0.762, -0.756, -0.749, -0.742, -0.736, -0.729, -0.722, -0.715, -0.708, -0.701, -0.694, -0.687, -0.679, -0.672, -0.664, -0.657, -0.649, -0.642, -0.634, -0.626, -0.618, -0.611, -0.603, -0.595, -0.587, -0.578, -0.57, -0.562, -0.554, -0.545, -0.537, -0.529, -0.52, -0.511, -0.503, -0.494, -0.486, -0.477, -0.468, -0.459, -0.45, -0.441, -0.432, -0.423, -0.414, -0.405, -0.396, -0.387, -0.377, -0.368, -0.359, -0.35, -0.34, -0.331, -0.321, -0.312, -0.302, -0.293, -0.283, -0.274, -0.264, -0.254, -0.245, -0.235, -0.225, -0.216, -0.206, -0.196, -0.186, -0.176, -0.167, -0.157, -0.147, -0.137, -0.127, -0.117, -0.107, -0.097, -0.087, -0.077, -0.067, -0.057, -0.047, -0.037, -0.027, -0.017, -0.007, 0.002, 0.012, 0.022, 0.032, 0.042, 0.052, 0.062, 0.072, 0.082, 0.092, 0.102, 0.112, 0.122, 0.132, 0.142, 0.152, 0.162, 0.171, 0.181, 0.191, 0.201, 0.211, 0.22, 0.23, 0.24, 0.25, 0.259, 0.269, 0.278, 0.288, 0.298, 0.307, 0.317, 0.326, 0.335, 0.345, 0.354, 0.364, 0.373, 0.382, 0.391, 0.4, 0.41, 0.419, 0.428, 0.437, 0.446, 0.455, 0.464, 0.472, 0.481, 0.49, 0.499, 0.507, 0.516, 0.524, 0.533, 0.541, 0.55, 0.558, 0.566, 0.574, 0.583, 0.591, 0.599, 0.607, 0.615, 0.622, 0.63, 0.638, 0.646, 0.653, 0.661, 0.668, 0.676, 0.683, 0.69, 0.697, 0.704, 0.712, 0.718, 0.725, 0.732, 0.739, 0.746, 0.752, 0.759, 0.765, 0.772, 0.778, 0.784, 0.79, 0.797, 0.803, 0.808, 0.814, 0.82, 0.826, 0.831, 0.837, 0.842, 0.848, 0.853, 0.858, 0.863, 0.868, 0.873, 0.878, 0.883, 0.887, 0.892, 0.896, 0.901, 0.905, 0.909, 0.913, 0.917, 0.921, 0.925, 0.929, 0.932, 0.936, 0.94, 0.943, 0.946, 0.949, 0.952, 0.955, 0.958, 0.961, 0.964, 0.966, 0.969, 0.971, 0.974, 0.976, 0.978, 0.98, 0.982, 0.984, 0.986, 0.987, 0.989, 0.99, 0.992, 0.993, 0.994, 0.995, 0.996, 0.997, 0.998, 0.998, 0.999, 0.999, 1.0, 1.0, 1.0
+}
+
+function sinq(x)
+    return SIN[ 1 + math.floor( ( x%TWO_PI ) * 100 ) ]
+end
+
+function cosq(x)
+    return COS[ 1 + math.floor( ( x%TWO_PI ) * 100 ) ]
+end
+
+-- [/TQ-Bundler: include.Lookup]
+
 -- [TQ-Bundler: include.Utils]
 
 function byteToUTF8(codepoint)
@@ -83,101 +103,75 @@ function inRads(v)
     return v%(TWO_PI)
 end
 
-function line(x1, y1, x2, y2, color, callback)
+function triCulled(x1, y1, x2, y2, x3, y3, color, callback)
+
     if not callback then callback=pix end
-	local cx = x1
-	local cy = y1
-	local dx = math.abs(x2 - x1)
-	local dy =-math.abs(y2 - y1)
-	local sx = x1 < x2 and 1 or -1
-	local sy = y1 < y2 and 1 or -1
+    local floor,min,max = math.floor,math.min,math.max
+    local areaABC = math.abs( (x1*(y2-y3)) + (x2*(y3-y1)) + (x3*(y1-y2)) ) / 2
 
-	local err = dx + dy
-	local e2 = 0
+    -- 28.4 fixed-point coordinates
+    local Y1 = floor(16.0 * y1 + 0.5)
+    local Y2 = floor(16.0 * y2 + 0.5)
+    local Y3 = floor(16.0 * y3 + 0.5)
 
-	while true do
-		callback(cx,cy,color)
-		if cx == x2 and cy == y2 then break end
-		e2 = 2 * err
-		if e2 >= dy then
-			err, cx = err + dy, cx + sx
-		end
-		if e2 <= dx then
-			err, cy = err + dx, cy + sy
-		end
-	end
-end
+    local X1 = floor(16.0 * x1 + 0.5)
+    local X2 = floor(16.0 * x2 + 0.5)
+    local X3 = floor(16.0 * x3 + 0.5)
 
--- function tri(x1,y1,x2,y2,x3,y3,color,callback)
+    -- Deltas
+    local DX12, DY12 = X1 - X2, Y1 - Y2
+    local DX23, DY23 = X2 - X3, Y2 - Y3
+    local DX31, DY31 = X3 - X1, Y3 - Y1
 
---     local floor = math.floor
+    -- Fixed-point deltas
+    local FDX12, FDY12 = DX12 << 4, DY12 << 4
+    local FDX23, FDY23 = DX23 << 4, DY23 << 4
+    local FDX31, FDY31 = DX31 << 4, DY31 << 4
 
---     local function fillBottomFlatTriangle(x1,y1,x2,y2,x3,y3,color)
---         local invslope1 = (x2 - x1) / (y2 - y1)
---         local invslope2 = (x3 - x1) / (y3 - y1)
---         local curx1 = x1
---         local curx2 = x1
-    
---         for scanlineY = y1, y2 do
---             line(floor(curx1), scanlineY, floor(curx2), scanlineY, color, callback)
---             curx1 = curx1 + invslope1
---             curx2 = curx2 + invslope2
---         end
---     end
+    -- Bounding rectangle
+    local minx = floor((min(X1, X2, X3) + 15) / 16)
+    local maxx = floor((max(X1, X2, X3) + 15) / 16)
+    local miny = floor((min(Y1, Y2, Y3) + 15) / 16)
+    local maxy = floor((max(Y1, Y2, Y3) + 15) / 16)
 
---     local function fillTopFlatTriangle(x1,y1,x2,y2,x3,y3,color)
---         local invslope1 = (x3 - x1) / (y3 - y1)
---         local invslope2 = (x3 - x2) / (y3 - y2)
---         local curx1 = x3
---         local curx2 = x3
-    
---         for scanlineY = y3, y1, -1 do
---             line(floor(curx1), scanlineY, floor(curx2), scanlineY, color, callback)
---             curx1 = curx1 - invslope1
---             curx2 = curx2 - invslope2
---         end
---     end
+    -- Half-edge constants
+    local C1 = DY12 * X1 - DX12 * Y1
+    local C2 = DY23 * X2 - DX23 * Y2
+    local C3 = DY31 * X3 - DX31 * Y3
 
---     if y2 < y1 then x1,y1,x2,y2 = x2,y2,x1,y1 end
---     if y3 < y1 then x1,y1,x3,y3 = x3,y3,x1,y1 end
---     if y3 < y2 then x2,y2,x3,y3 = x3,y3,x2,y2 end
+    -- Correct for fill convention (CCW winding)
+    if DY12 > 0 or (DY12 == 0 and DX12 < 0) then C1 = C1 + 1 end
+    if DY23 > 0 or (DY23 == 0 and DX23 < 0) then C2 = C2 + 1 end
+    if DY31 > 0 or (DY31 == 0 and DX31 < 0) then C3 = C3 + 1 end
 
---     if y2 == y3 then fillBottomFlatTriangle(x1,y1,x2,y2,x3,y3,color)
---     elseif y1 == y2 then fillTopFlatTriangle(x1,y1,x2,y2,x3,y3,color)
---     else
---         local x4 = floor( x1 + ((y2-y1)/(y3-y1)) * (x3-x1) )
---         local y4 = y2
---         fillBottomFlatTriangle(x1,y1,x2,y2,x4,y4,color)
---         fillTopFlatTriangle(x2,y2,x4,y4,x3,y3,color)
---     end
+    -- Initialize edge values at top-left corner of bounding box
+    local CY1 = C1 + DX12 * (miny << 4) - DY12 * (minx << 4)
+    local CY2 = C2 + DX23 * (miny << 4) - DY23 * (minx << 4)
+    local CY3 = C3 + DX31 * (miny << 4) - DY31 * (minx << 4)
 
--- end
+    -- Loop over bounding box
+    for y = miny, maxy - 1 do
+        local CX1, CX2, CX3 = CY1, CY2, CY3
 
-function tri(x1,y1,x2,y2,x3,y3,color,callback)
-    local min,max = math.min,math.max
-    local minX,minY = min(x1,min(x2,x3)),min(y1,min(y2,y3))
-    local maxX,maxY = max(x1,max(x2,x3)),max(y1,max(y2,y3))
-    local v1 = {x=x2-x1,y=y2-y1}
-    local v2 = {x=x3-x1,y=y3-y1}
-
-    local function cross(v1,v2)
-        return (v1.x*v2.y) - (v1.y*v2.x)
-    end
-
-    for x=minX,maxX do
-        for y=minY,maxY do
-            local q = {x=x-x1,y=y-y1}
-            local s = cross(q,v2)/cross(v1,v2)
-            local t = cross(v1,q)/cross(v1,v2)
-
-            if s>=0 and t>=0 and s+t<=1 then
-                local payload = {minX=minX,minY=minY,maxX=maxX,maxY=maxY,s=s,t=t}
-                callback(x,y,color,payload)
+        for x = minx, maxx - 1 do
+            if CX1 < 0 and CX2 < 0 and CX3 < 0 then -- CCW winding
+                callback(x,y,color,{
+                    pA={x=x1,y=y1},
+                    pB={x=x2,y=y2},
+                    pC={x=x3,y=y3},
+                    areaABC=areaABC
+                })
             end
 
+            CX1 = CX1 - FDY12
+            CX2 = CX2 - FDY23
+            CX3 = CX3 - FDY31
         end
-    end
 
+        CY1 = CY1 + FDX12
+        CY2 = CY2 + FDX23
+        CY3 = CY3 + FDX31
+    end
 end
 
 -- [/TQ-Bundler: include.Utils]
@@ -360,43 +354,24 @@ function Camera.mt.__call(self,pos,rot,dir)
     end
 
     function s:updateVectors()
-        local horizontalX,horizontalZ = math.cos(PI-self.rot.y),math.sin(PI-self.rot.y)
-        self.horizontalVector,self.verticalVector = Dir3D(horizontalX,0,horizontalZ),Dir3D(0,1,0)
+        local horizontalX,horizontalZ = cosq(PI-self.rot.y),sinq(PI-self.rot.y)
+        local hv,vv = self.horizontalVector,self.verticalVector
+        if not hv then self.horizontalVector = Dir3D(); hv = self.horizontalVector end
+        if not vv then self.verticalVector = Y_AXIS end
+        hv.x,hv.y,hv.z = horizontalX,0,horizontalZ
     end
 
     function s:isPointInView(p,r)
+        
         if r==nil then r=0 end
-        local cameraPos = self.pos
-        local clippingPlanes = self.clippingPlanes
-        local isInView = true
         local errorMargin = 0.005
 
-        local planeDistFromOrigin = -( clippingPlanes.left.normal:getDotProduct(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.left.normal:getDotProduct(p) + planeDistFromOrigin
-        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
-        if not isInView then return false end
+        for _,plane in pairs(self.clippingPlanes) do
+            if getSignedDistToPlane(p,plane) < -r - errorMargin then return false
+        end
 
-        local planeDistFromOrigin = -( clippingPlanes.top.normal:getDotProduct(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.top.normal:getDotProduct(p) + planeDistFromOrigin
-        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
-        if not isInView then return false end
+        return true end
 
-        local planeDistFromOrigin = -( clippingPlanes.right.normal:getDotProduct(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.right.normal:getDotProduct(p) + planeDistFromOrigin
-        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
-        if not isInView then return false end
-
-        local planeDistFromOrigin = -( clippingPlanes.bottom.normal:getDotProduct(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.bottom.normal:getDotProduct(p) + planeDistFromOrigin
-        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
-        if not isInView then return false end
-
-        local planeDistFromOrigin = -( clippingPlanes.near.normal:getDotProduct(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.near.normal:getDotProduct(p) + planeDistFromOrigin
-        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
-        if not isInView then return false end
-
-        return isInView
     end
 
     setmetatable(s,Camera.mti)
@@ -419,8 +394,7 @@ Pos3D.mt={}
 Pos3D.mti={}
 
 function Pos3D.mt.__call(self,x,y,z,w)
-	local s={x=x,y=y,z=z,w=1}
-	if w then s.w=w end
+	local s={x=x,y=y,z=z,w=(w or 1)}
 	s.matrix=Matrix4D.fromVector3D(s)
 
 	function s:updateMatrix()
@@ -481,12 +455,16 @@ function Pos3D.mt.__call(self,x,y,z,w)
 	function s:toCameraTransform()
 
 		local m = self.matrix:getCopy()
+		local pos = camera.pos
+		local rot = camera.rot
+		local posx,posy,posz=pos.x,pos.y,pos.z
+		local rotx,roty,rotz=rot.x,rot.y,rot.z
 
 		-- translate/rotate about the camera
-		m:applyTranslation(-camera.pos.x,-camera.pos.y,-camera.pos.z)
-		m:applyAxisAngleRotation(Dir3D(1,0,0),-camera.rot.x)
-		m:applyAxisAngleRotation(Dir3D(0,1,0),PI-camera.rot.y)
-		m:applyAxisAngleRotation(Dir3D(0,0,1),-camera.rot.z)
+		m:applyTranslation(-posx,-posy,-posz)
+		m:applyAxisAngleRotation(X_AXIS,-rotx)
+		m:applyAxisAngleRotation(Y_AXIS,PI-roty)
+		m:applyAxisAngleRotation(Z_AXIS,-rotz)
 
 		return Pos3D.fromMatrix4D(m)
 
@@ -625,59 +603,60 @@ Dir3D.mt={}
 Dir3D.mti={}
 
 function Dir3D.mt.__call(self,x,y,z,w)
-	local s={x=x,y=y,z=z,w=0}
-	if w then s.w=w end
+	local s={x=x,y=y,z=z,w=(w or 0)}
 	s.matrix=Matrix4D.fromVector3D(s)
+	return setmetatable(s,Dir3D.mti)
+end
 
-	function s:getCopy()
-		return Dir3D(self.x,self.y,self.z,self.w)
+function Dir3D:getCopy()
+	return Dir3D(self.x,self.y,self.z,self.w)
+end
+
+function Dir3D:updateMatrix()
+	self.matrix.values={{self.x},{self.y},{self.z},{self.w}}
+end
+
+function Dir3D:getDotProduct(p2)
+	return (self.x*p2.x)+(self.y*p2.y)+(self.z*p2.z)
+end
+
+function Dir3D:getCrossProduct(v)
+	local x = ( self.y * v.z ) - ( v.y * self.z )
+	local y = ( self.z * v.x ) - ( v.z * self.x )
+	local z = ( self.x * v.y ) - ( v.x * self.y )
+	return Dir3D(x,y,z,self.w)
+end
+
+function Dir3D:rotate(x,y,z)
+	local m=self.matrix
+	m:applyRotation(x,y,z)
+	self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
+	self:updateMatrix()
+end
+
+function Dir3D:rotateAboutAxis(dir,angle)
+	local m=self.matrix
+	m:applyAxisAngleRotation(dir,angle)
+	self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
+	self:updateMatrix()
+end
+
+function Dir3D:getCanonical()
+	local div=self.w
+	if self.w == 0 then div = 1 end
+	return Dir3D(self.x/div,self.y/div,self.z/div,0)
+end
+
+function Dir3D:getMagnitude()
+	local v = self:getCanonical()
+	if v.w == 0 then
+		return math.sqrt(math.abs(v:getDotProduct(v)))
 	end
+	return math.sqrt(math.abs(v:getDotProduct(v))-1)
+end
 
-	function s:updateMatrix()
-		self.matrix.values={{self.x},{self.y},{self.z},{self.w}}
-	end
-
-	function s:getDotProduct(p2)
-		return (self.x*p2.x)+(self.y*p2.y)+(self.z*p2.z)
-	end
-
-	function s:getCrossProduct(v)
-		local x = ( self.y * v.z ) - ( v.y * self.z )
-		local y = ( self.z * v.x ) - ( v.z * self.x )
-		local z = ( self.x * v.y ) - ( v.x * self.y )
-		return Dir3D(x,y,z,self.w)
-	end
-
-	function s:rotate(x,y,z)
-		local m=self.matrix
-		m:applyRotation(x,y,z)
-		self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
-		self:updateMatrix()
-	end
-
-	function s:rotateAboutAxis(dir,angle)
-		local m=self.matrix
-		m:applyAxisAngleRotation(dir,angle)
-		self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
-		self:updateMatrix()
-	end
-
-	function s:getCanonical()
-		local div=self.w
-		if self.w == 0 then div = 1 end
-		return Dir3D(self.x/div,self.y/div,self.z/div,0)
-	end
-
-	function s:getMagnitude()
-		local v = self:getCanonical()
-		if v.w == 0 then
-			return math.sqrt(math.abs(v:getDotProduct(v)))
-		end
-		return math.sqrt(math.abs(v:getDotProduct(v))-1)
-	end
-
-	setmetatable(s,Dir3D.mti)
-	return s
+function Dir3D.mti.__index(self,i)
+	return Dir3D[i]
 end
 
 function Dir3D.mti.__add(self,v)
@@ -753,16 +732,16 @@ Matrix.mt={}
 Matrix.mti={}
 
 function Matrix.mt.__call(self,rows,cols)
-	s={rows=rows,cols=cols,values={}}
-
-	for row=1,rows do
-		s.values[row]={}
-		for col=1,cols do
-			s.values[row][col]=0
-		end
-	end
-	setmetatable(s,Matrix.mti)
-	return s
+    local values = {}
+    for row = 1, rows do
+        local rowValues = {}
+        for col = 1, cols do
+            rowValues[col] = 0
+        end
+        values[row] = rowValues
+    end
+    local s = { rows = rows, cols = cols, values = values }
+    return setmetatable(s, Matrix.mti)
 end
 
 function Matrix.mti.__index(self,i)
@@ -807,6 +786,20 @@ end
 
 setmetatable(Matrix,Matrix.mt)
 
+Matrix.M44 = Matrix(4,4)
+Matrix.M41 = Matrix(4,1)
+
+function Matrix.bindLocalMatrixToFunction(func,rows,cols,initialValuesTable)
+	local m = Matrix(rows,cols)
+	local unpack = table.unpack
+	function transform(...)
+		local params={...}
+		if initialValuesTable then m.values = initialValuesTable end
+		return func(m,unpack(params))
+	end
+	return transform
+end
+
 -- [/TQ-Bundler: class.Matrix]
 
 -- [TQ-Bundler: class.Matrix4D]
@@ -835,112 +828,149 @@ Matrix4D.rotationMatrixZ.values = {
 	{ 0, 0, 1, 0},
 	{ 0, 0, 0, 1}
 }
-Matrix4D.screenProjectionMatrix.values = {
-	{"viewportfocaldist",0,0,0},
-	{0,"viewportfocaldist",0,0},
-	{0,0,1,0},
-	{0,0,1,0}
-}
 
 function Matrix4D.mt.__call(self,x,y,z,w)
 	local s=Matrix(4,1)
 	s.values = {{x},{y},{z},{w}}
+	return setmetatable(s,Matrix4D.mti)
+end
 
-	function s:getCopy()
-		return Matrix4D(self[1][1],self[2][1],self[3][1],self[4][1])
-	end
+function Matrix4D:getCopy()
+	return Matrix4D(self[1][1],self[2][1],self[3][1],self[4][1])
+end
 
-	function s:applyRotation(x,y,z)
-		local sin = math.sin
-		local cos = math.cos
+do
+	local function applyRotation(m,self,x,y,z)
+		local sin = sinq
+		local cos = cosq
 		local sinx,cosx = sin(x),cos(x)
 		local siny,cosy = sin(y),cos(y)
 		local sinz,cosz = sin(z),cos(z)
 		local rx,ry,rz=Matrix4D.rotationMatrixX,Matrix4D.rotationMatrixY,Matrix4D.rotationMatrixZ
-
-		rx[2][2] = cosx
-		rx[2][3] = -sinx
-		rx[3][2] = sinx
-		rx[3][3] = cosx
-
-		ry[1][1] = cosy
-		ry[1][3] = siny
-		ry[3][1] = -siny
-		ry[3][3] = cosy
-
-		rz[1][1] = cosz
-		rz[1][2] = -sinz
-		rz[2][1] = sinz
-		rz[2][2] = cosz
-
-		self.values = ((rx*ry*rz)*self).values
+	
+		if x ~= 0 then
+			rx[2][2] = cosx
+			rx[2][3] = -sinx
+			rx[3][2] = sinx
+			rx[3][3] = cosx
+			m.values = (m*rx).values
+		end
+	
+		if y ~= 0 then
+			ry[1][1] = cosy
+			ry[1][3] = siny
+			ry[3][1] = -siny
+			ry[3][3] = cosy
+			m.values = (m*ry).values
+		end
+	
+		if z ~= 0 then
+			rz[1][1] = cosz
+			rz[1][2] = -sinz
+			rz[2][1] = sinz
+			rz[2][2] = cosz
+			m.values = (m*rz).values
+		end
+	
+		self.values = (m*self).values
 	end
+	Matrix4D.applyRotation = Matrix.bindLocalMatrixToFunction(applyRotation,4,4,{
+		{1,0,0,0},
+		{0,1,0,0},
+		{0,0,1,0},
+		{0,0,0,1}
+	})
 
-	function s:applyAxisAngleRotation(dir,angle)
-		local c=math.cos(angle)
-		local s=math.sin(angle)
+	local function applyAxisAngleRotation(m,self,dir,angle)
+		local c=cosq(angle)
+		local s=sinq(angle)
 		local C=1-c
-		local x=dir.x
-		local y=dir.y
-		local z=dir.z
-		local Q=Matrix(4,4)
-		Q.values={
-			{ x*x*C+c,   x*y*C-z*s, x*z*C+y*s, 0 },
-			{ y*x*C+z*s, y*y*C+c,   y*z*C-x*s, 0 },
-			{ z*x*C-y*s, z*y*C+x*s, z*z*C+c,   0 },
-			{ 0,         0,         0,         1 }
-		}
-		self.values = (Q*self).values
+		local x,y,z = dir.x,dir.y,dir.z
+		local xC,yC,zC,xs,ys,zs = x*C,y*C,z*C,x*s,y*s,z*s
+		local values = m.values
+
+		values[1][1] = x*xC+c
+		values[1][2] = y*xC-zs
+		values[1][3] = z*xC+ys
+		values[2][1] = y*xC+zs
+		values[2][2] = y*yC+c
+		values[2][3] = z*yC-xs
+		values[3][1] = z*xC-ys
+		values[3][2] = z*yC+xs
+		values[3][3] = z*zC+c
+		
+		self.values = (m*self).values
 	end
+	Matrix4D.applyAxisAngleRotation = Matrix.bindLocalMatrixToFunction(applyAxisAngleRotation,4,4,{
+		{0,0,0,0},
+		{0,0,0,0},
+		{0,0,0,0},
+		{0,0,0,1}
+	})
 
-	function s:applyScaleFactor(sx,sy,sz)
-		local Q=Matrix(4,4)
-		Q.values = {
-			{ sx, 0, 0, 0 },
-			{ 0, sy, 0, 0 },
-			{ 0, 0, sz, 0 },
-			{ 0, 0, 0, 1 }
-		}
-		self.values = (Q*self).values
+	local function applyScaleFactor(m,self,sx,sy,sz)
+		local values = m.values
+		values[1][1] = sx
+		values[2][2] = sy
+		values[3][3] = sz
+		self.values = (m*self).values
 	end
+	Matrix4D.applyScaleFactor = Matrix.bindLocalMatrixToFunction(applyScaleFactor,4,4,{
+		{0,0,0,0},
+		{0,0,0,0},
+		{0,0,0,0},
+		{0,0,0,1}
+	})
 
-	function s:applyTranslation(tx,ty,tz)
-		local Q=Matrix(4,4)
-		Q.values = {
-			{ 1, 0, 0, tx },
-			{ 0, 1, 0, ty },
-			{ 0, 0, 1, tz },
-			{ 0, 0, 0, 1 }
-		}
-		self.values = (Q*self).values
+	local function applyTranslation(m,self,tx,ty,tz)
+		local values = m.values
+		values[1][4] = tx
+		values[2][4] = ty
+		values[3][4] = tz
+		self.values = (m*self).values
 	end
+	Matrix4D.applyTranslation = Matrix.bindLocalMatrixToFunction(applyTranslation,4,4,{
+		{1,0,0,0},
+		{0,1,0,0},
+		{0,0,1,0},
+		{0,0,0,1}
+	})
 
-	function s:getCanonical()
-		return Matrix4D(self[1][1]/self[4][1],self[2][1]/self[4][1],self[3][1]/self[4][1],1)
-	end
+	local function toScreenSpace(m,self)
+	
+		local viewportWidth,viewportHeight,viewportFocalDist = viewport.size.w,viewport.size.h,viewport._focalDist
+		local values = m.values
+		values[1][1] = viewportFocalDist
+		values[2][2] = viewportFocalDist
 
-	function s:toLocalTransform(origin,rot,scale)
-		local m=self:getCopy()
-		m:applyScaleFactor(scale,scale,scale)
-		m:applyRotation(rot.x,rot.y,rot.z)
-		m:applyTranslation(origin.x,origin.y,origin.z)
-		return Pos3D(m[1][1],m[2][1],m[3][1],m[4][1])
-	end
-
-	function s:toScreenSpace()
-
-		local projectionMatrix = Matrix4D.screenProjectionMatrix
-
-		local result = Matrix4D.fromMatrix(projectionMatrix*self):getCanonical()
-		result[1][1] = ((result[1][1]+viewport.size.w/2)*SCREEN_WIDTH)/viewport.size.w
-		result[2][1] = ((result[2][1]+viewport.size.h/2)*SCREEN_HEIGHT)/viewport.size.h
-
+		local result = Matrix4D.fromMatrix(m*self):getCanonical().values
+	
+		result[1][1] = ((result[1][1]+viewportWidth/2)*SCREEN_WIDTH)/viewportWidth
+		result[2][1] = ((result[2][1]+viewportHeight/2)*SCREEN_HEIGHT)/viewportHeight
+	
 		return Pos2D(result[1][1],result[2][1])
-
+	
 	end
+	Matrix4D.toScreenSpace = Matrix.bindLocalMatrixToFunction(toScreenSpace,4,4,{
+		{0,0,0,0},
+		{0,0,0,0},
+		{0,0,1,0},
+		{0,0,1,0}
+	})
 
-	setmetatable(s,Matrix4D.mti)
-	return s
+end
+
+function Matrix4D:getCanonical()
+	local w = self[4][1]
+	return Matrix4D(self[1][1]/w,self[2][1]/w,self[3][1]/w,1)
+end
+
+function Matrix4D:toLocalTransform(origin,rot,scale)
+	local m=self:getCopy()
+	m:applyScaleFactor(scale,scale,scale)
+	m:applyRotation(rot.x,rot.y,rot.z)
+	m:applyTranslation(origin.x,origin.y,origin.z)
+	return Pos3D(m[1][1],m[2][1],m[3][1],m[4][1])
 end
 
 function Matrix4D.fromVector3D(v)
@@ -951,7 +981,10 @@ function Matrix4D.fromMatrix(m)
 	return Matrix4D(m[1][1],m[2][1],m[3][1],m[4][1])
 end
 
-Matrix4D.mti.__index = Matrix.mti.__index
+function Matrix4D.mti.__index(self,i)
+	return self.values[i] ~= nil and self.values[i] or Matrix4D[i]
+end
+
 Matrix4D.mti.__add = Matrix.mti.__add
 Matrix4D.mti.__sub = Matrix.mti.__sub
 Matrix4D.mti.__mul = Matrix.mti.__mul
@@ -1008,20 +1041,11 @@ function Object3D._renderRoutines.mesh(self)
     local mesh = scene.loadedObjects[self.meshID]
     self.origin = self.pos
 
-    -- local function shallowCopyTable(orig)
-    --     local copy = {}
-    --     for i=1, #orig do
-    --         copy[i] = orig[i]
-    --     end
-    --     return copy
-    -- end
-
     local function getResultantTriangles(verticesTable)
 
         local resultantTriangles,newBorderVertices = {},{}
         local borderVertices = verticesTable
-        local move = table.move
-        local abs = math.abs
+        local move,abs = table.move,math.abs
 
         for planeIndex=1,#camera.clippingPlanes do
 
@@ -1070,7 +1094,6 @@ function Object3D._renderRoutines.mesh(self)
     end
 
     for triangleIndex=1,#mesh.triangles do
-    -- for triangleIndex=1,1 do
 
         local triangle = mesh.triangles[triangleIndex]
         local triangleVertices = triangle.vertices
@@ -1094,7 +1117,7 @@ function Object3D._renderRoutines.mesh(self)
                 local t = resultantTriangles[i]
                 local insertIndex = 1
 
-                local depth = math.huge
+                local depths = {}
 
                 for j=1,3 do
                     local vertex = t.vertices[j]
@@ -1104,26 +1127,45 @@ function Object3D._renderRoutines.mesh(self)
                     triangleScreenValues[insertIndex+1] = screenPos.y
                     insertIndex=insertIndex+2
 
-                    depth = math.min(depth,math.abs(inCameraPos.z))
+                    table.insert(depths,math.abs(inCameraPos.z))
                 end
 
                 triangleScreenValues[insertIndex] = 1+(triangleIndex%7)
 
-                -- idk what to do with this yet...
                 local function depthBufferCallback(x,y,color,info)
-                    local xf,yf = math.floor(x),math.floor(y)
-                    if xf>=1 and xf<= SCREEN_WIDTH and yf>=1 and yf<=SCREEN_HEIGHT and depth < Z_BUFFER[xf][yf] then
-                        Z_BUFFER[xf][yf] = depth
-                        pix(xf,yf,color)
-                        pix(info.minX+((info.maxX-info.minX)*info.s),info.maxY-((info.maxY-info.minY)*info.t),12)
+
+                    if not ( x>=1 and x<=SCREEN_WIDTH and y>=1 and y<=SCREEN_HEIGHT ) then return end
+
+                    local pA,pB,pC = info.pA,info.pB,info.pC
+                    local abs = math.abs
+
+                    local deltayBC = pB.y-pC.y
+                    local deltayCA = pC.y-pA.y
+                    local deltayAB = pA.y-pB.y
+
+                    local areaABC = info.areaABC
+                    local areaPBC = abs( (x*(deltayBC)) + (pB.x*(pC.y-y)) + (pC.x*(y-pB.y)) ) / 2
+                    local areaPCA = abs( (pA.x*(y-pC.y)) + (x*(deltayCA)) + (pC.x*(pA.y-y)) ) / 2
+                    local areaPAB = abs( (pA.x*(pB.y-y)) + (pB.x*(y-pA.y)) + (x*(deltayAB)) ) / 2
+
+                    local alpha = areaPBC / areaABC
+                    local beta = areaPCA / areaABC
+                    local gamma = areaPAB / areaABC
+
+                    local depth = (alpha*depths[1]) + (beta*depths[2]) + (gamma*depths[3])
+
+                    if depth < Z_BUFFER[x][y] then
+
+                        Z_BUFFER[x][y] = depth
+                        pix(x,y,color)
+
                     end
+
                 end
 
                 table.insert(triangleScreenValues,depthBufferCallback)
 
-                tri(unpack(triangleScreenValues))
-                -- triangleScreenValues[7] = 12
-                -- trib(table.unpack(triangleScreenValues))
+                triCulled(unpack(triangleScreenValues))
 
             end
 
@@ -1342,6 +1384,8 @@ TWO_PI=6.2831854
 PI_OVER_TWO=1.57079635
 WORLD_ORIGIN=Pos3D(0,0,0)
 Z_BUFFER={}
+DEBUG=false
+X_AXIS,Y_AXIS,Z_AXIS = Dir3D(1,0,0),Dir3D(0,1,0),Dir3D(0,0,1)
 
 -- SCENE COMPONENTS --
 
@@ -1357,6 +1401,9 @@ function viewport:updateFocalDist()
 	Matrix4D.screenProjectionMatrix[1][1],Matrix4D.screenProjectionMatrix[2][2]=self._focalDist,self._focalDist
 end
 viewport:updateFocalDist()
+
+HalfViewportWidth,HalfViewportHeight = viewport.size.w/2,viewport.size.h/2
+ScreenWidthScale,ScreenHeightScale = SCREEN_WIDTH/viewport.size.w,SCREEN_HEIGHT/viewport.size.h
 
 light={
 	pos=Pos3D(-5,6,5)
@@ -1378,10 +1425,12 @@ scene={
 -- METHODS --
 
 function initializeZBuffer()
+	local huge = math.huge
 	for col=1,SCREEN_WIDTH do
 		if not Z_BUFFER[col] then Z_BUFFER[col] = {} end
+		local zcol = Z_BUFFER[col]
 		for row=1,SCREEN_HEIGHT do
-			Z_BUFFER[col][row] = math.huge
+			zcol[row] = huge
 		end
 	end
 end
@@ -1468,9 +1517,9 @@ function getTriangleCircumcenter(pA,pB,pC)
 end
 
 function updateMouseInfo()
-	if gmouse.x==nil then gmouse.x=0 end
-	if gmouse.y==nil then gmouse.y=0 end
-	if gmouse.previous==nil then gmouse.previous={} end
+	if not gmouse.x then gmouse.x=0 end
+	if not gmouse.y then gmouse.y=0 end
+	if not gmouse.previous then gmouse.previous={} end
 	gmouse.previous.x=gmouse.x
 	gmouse.previous.y=gmouse.y
 	gmouse.previous.down=mouseDown
@@ -1503,8 +1552,8 @@ function TIC()
 		camera:initalizeClippingPlanes()
 		camera:updateClippingPlanes()
 		loadObjects()
-		cube=Object3D("mesh","testtri",Pos3D(0,0,3),Rot3D(0,0,0),Dir3D(0,0,1),0.2)
-		--profiler.start()
+		cube=Object3D("mesh","mips",Pos3D(0,-1.4,5),Rot3D(0,0,0),Dir3D(0,0,1),0.2)
+		if DEBUG then profiler.start() end
 	end
 
 	cls(0)
@@ -1514,7 +1563,9 @@ function TIC()
 	if btn(2) then camera.pos=translate3D(camera.pos,camera.horizontalVector,0.1) end --right
 	if btn(3) then camera.pos=translate3D(camera.pos,camera.horizontalVector,-0.1) end --left
 
-	if btn(4) then scene.get(cube).rot:rotate(0,0.05,0) end
+	if btn(4) then
+		scene.get(cube).rot:rotate(0,0.1,0)
+	end
 
 	if gmouse.down then
 		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)
@@ -1526,11 +1577,11 @@ function TIC()
 
 	renderScreen()
 
-	-- if t==10 then
-	-- 	profiler.stop()
-	-- 	trace(profiler.report(20))
-	-- 	exit()
-	-- end
+	if DEBUG and t==10 then
+		profiler.stop()
+		trace(profiler.report(20))
+		exit()
+	end
 
 	if t%fpsInterval==0 then
 		frameEndTimeMilliseconds=time()
