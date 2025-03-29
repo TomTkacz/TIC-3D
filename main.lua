@@ -31,7 +31,8 @@ TWO_PI=6.2831854
 PI_OVER_TWO=1.57079635
 WORLD_ORIGIN=Pos3D(0,0,0)
 Z_BUFFER={}
-DEBUG=true
+DEBUG=false
+X_AXIS,Y_AXIS,Z_AXIS = Dir3D(1,0,0),Dir3D(0,1,0),Dir3D(0,0,1)
 
 -- SCENE COMPONENTS --
 
@@ -47,6 +48,9 @@ function viewport:updateFocalDist()
 	Matrix4D.screenProjectionMatrix[1][1],Matrix4D.screenProjectionMatrix[2][2]=self._focalDist,self._focalDist
 end
 viewport:updateFocalDist()
+
+HalfViewportWidth,HalfViewportHeight = viewport.size.w/2,viewport.size.h/2
+ScreenWidthScale,ScreenHeightScale = SCREEN_WIDTH/viewport.size.w,SCREEN_HEIGHT/viewport.size.h
 
 light={
 	pos=Pos3D(-5,6,5)
@@ -160,9 +164,9 @@ function getTriangleCircumcenter(pA,pB,pC)
 end
 
 function updateMouseInfo()
-	if gmouse.x==nil then gmouse.x=0 end
-	if gmouse.y==nil then gmouse.y=0 end
-	if gmouse.previous==nil then gmouse.previous={} end
+	if not gmouse.x then gmouse.x=0 end
+	if not gmouse.y then gmouse.y=0 end
+	if not gmouse.previous then gmouse.previous={} end
 	gmouse.previous.x=gmouse.x
 	gmouse.previous.y=gmouse.y
 	gmouse.previous.down=mouseDown
@@ -195,7 +199,7 @@ function TIC()
 		camera:initalizeClippingPlanes()
 		camera:updateClippingPlanes()
 		loadObjects()
-		cube=Object3D("mesh","mips",Pos3D(0,-1,5),Rot3D(0,0,0),Dir3D(0,0,1),0.2)
+		cube=Object3D("mesh","mips",Pos3D(0,-1.4,5),Rot3D(0,0,0),Dir3D(0,0,1),0.2)
 		if DEBUG then profiler.start() end
 	end
 

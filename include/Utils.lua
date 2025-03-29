@@ -73,6 +73,7 @@ function triCulled(x1, y1, x2, y2, x3, y3, color, callback)
 
     if not callback then callback=pix end
     local floor,min,max = math.floor,math.min,math.max
+    local areaABC = math.abs( (x1*(y2-y3)) + (x2*(y3-y1)) + (x3*(y1-y2)) ) / 2
 
     -- 28.4 fixed-point coordinates
     local Y1 = floor(16.0 * y1 + 0.5)
@@ -123,7 +124,8 @@ function triCulled(x1, y1, x2, y2, x3, y3, color, callback)
                 callback(x,y,color,{
                     pA={x=x1,y=y1},
                     pB={x=x2,y=y2},
-                    pC={x=x3,y=y3}
+                    pC={x=x3,y=y3},
+                    areaABC=areaABC
                 })
             end
 

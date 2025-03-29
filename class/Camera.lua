@@ -62,42 +62,23 @@ function Camera.mt.__call(self,pos,rot,dir)
 
     function s:updateVectors()
         local horizontalX,horizontalZ = cosq(PI-self.rot.y),sinq(PI-self.rot.y)
-        self.horizontalVector,self.verticalVector = Dir3D(horizontalX,0,horizontalZ),Dir3D(0,1,0)
+        local hv,vv = self.horizontalVector,self.verticalVector
+        if not hv then self.horizontalVector = Dir3D(); hv = self.horizontalVector end
+        if not vv then self.verticalVector = Y_AXIS end
+        hv.x,hv.y,hv.z = horizontalX,0,horizontalZ
     end
 
     function s:isPointInView(p,r)
+        
         if r==nil then r=0 end
-        local cameraPos = self.pos
-        local clippingPlanes = self.clippingPlanes
-        local isInView = true
         local errorMargin = 0.005
 
-        local planeDistFromOrigin = -( clippingPlanes.left.normal:getDotProduct(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.left.normal:getDotProduct(p) + planeDistFromOrigin
-        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
-        if not isInView then return false end
+        for _,plane in pairs(self.clippingPlanes) do
+            if getSignedDistToPlane(p,plane) < -r - errorMargin then return false
+        end
 
-        local planeDistFromOrigin = -( clippingPlanes.top.normal:getDotProduct(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.top.normal:getDotProduct(p) + planeDistFromOrigin
-        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
-        if not isInView then return false end
+        return true end
 
-        local planeDistFromOrigin = -( clippingPlanes.right.normal:getDotProduct(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.right.normal:getDotProduct(p) + planeDistFromOrigin
-        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
-        if not isInView then return false end
-
-        local planeDistFromOrigin = -( clippingPlanes.bottom.normal:getDotProduct(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.bottom.normal:getDotProduct(p) + planeDistFromOrigin
-        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
-        if not isInView then return false end
-
-        local planeDistFromOrigin = -( clippingPlanes.near.normal:getDotProduct(cameraPos) )
-        local signedDistanceToPlane = clippingPlanes.near.normal:getDotProduct(p) + planeDistFromOrigin
-        isInView = isInView and signedDistanceToPlane >= -r - errorMargin
-        if not isInView then return false end
-
-        return isInView
     end
 
     setmetatable(s,Camera.mti)

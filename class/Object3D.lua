@@ -48,8 +48,7 @@ function Object3D._renderRoutines.mesh(self)
 
         local resultantTriangles,newBorderVertices = {},{}
         local borderVertices = verticesTable
-        local move = table.move
-        local abs = math.abs
+        local move,abs = table.move,math.abs
 
         for planeIndex=1,#camera.clippingPlanes do
 
@@ -138,6 +137,8 @@ function Object3D._renderRoutines.mesh(self)
 
                 local function depthBufferCallback(x,y,color,info)
 
+                    if not ( x>=1 and x<=SCREEN_WIDTH and y>=1 and y<=SCREEN_HEIGHT ) then return end
+
                     local pA,pB,pC = info.pA,info.pB,info.pC
                     local abs = math.abs
 
@@ -145,7 +146,7 @@ function Object3D._renderRoutines.mesh(self)
                     local deltayCA = pC.y-pA.y
                     local deltayAB = pA.y-pB.y
 
-                    local areaABC = abs( (pA.x*(deltayBC)) + (pB.x*(deltayCA)) + (pC.x*(deltayAB)) ) / 2
+                    local areaABC = info.areaABC
                     local areaPBC = abs( (x*(deltayBC)) + (pB.x*(pC.y-y)) + (pC.x*(y-pB.y)) ) / 2
                     local areaPCA = abs( (pA.x*(y-pC.y)) + (x*(deltayCA)) + (pC.x*(pA.y-y)) ) / 2
                     local areaPAB = abs( (pA.x*(pB.y-y)) + (pB.x*(y-pA.y)) + (x*(deltayAB)) ) / 2
@@ -156,7 +157,7 @@ function Object3D._renderRoutines.mesh(self)
 
                     local depth = (alpha*depths[1]) + (beta*depths[2]) + (gamma*depths[3])
 
-                    if x>=1 and x<=SCREEN_WIDTH and y>=1 and y<=SCREEN_HEIGHT and depth < Z_BUFFER[x][y] then
+                    if depth < Z_BUFFER[x][y] then
 
                         Z_BUFFER[x][y] = depth
                         pix(x,y,color)

@@ -71,9 +71,9 @@ function Pos3D.mt.__call(self,x,y,z,w)
 
 		-- translate/rotate about the camera
 		m:applyTranslation(-posx,-posy,-posz)
-		m:applyAxisAngleRotation(Dir3D(1,0,0),-rotx)
-		m:applyAxisAngleRotation(Dir3D(0,1,0),PI-roty)
-		m:applyAxisAngleRotation(Dir3D(0,0,1),-rotz)
+		m:applyAxisAngleRotation(X_AXIS,-rotx)
+		m:applyAxisAngleRotation(Y_AXIS,PI-roty)
+		m:applyAxisAngleRotation(Z_AXIS,-rotz)
 
 		return Pos3D.fromMatrix4D(m)
 
