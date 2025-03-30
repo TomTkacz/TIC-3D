@@ -8,6 +8,7 @@
 include "include.Lookup"
 include "include.Utils"
 include "include.LoadObjects"
+include "class.Quaternion"
 include "class.Camera"
 include "class.Pos3D"
 include "class.Pos2D"
@@ -16,7 +17,6 @@ include "class.Dir3D"
 include "class.Size2D"
 include "class.Ray"
 include "class.Matrix"
-include "class.Matrix4D"
 include "class.Object3D"
 include "debug.Profiler"
 
@@ -45,7 +45,6 @@ viewport={
 function viewport:updateFocalDist()
 	self._focalDist = self.size.w / ( 2*math.tan(math.rad(self.fov)/2) )
 	self._vfov = 2 * math.atan( self.size.h, (2*self._focalDist) ) -- in radians
-	Matrix4D.screenProjectionMatrix[1][1],Matrix4D.screenProjectionMatrix[2][2]=self._focalDist,self._focalDist
 end
 viewport:updateFocalDist()
 

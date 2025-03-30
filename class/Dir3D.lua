@@ -4,16 +4,11 @@ Dir3D.mti={}
 
 function Dir3D.mt.__call(self,x,y,z,w)
 	local s={x=x,y=y,z=z,w=(w or 0)}
-	s.matrix=Matrix4D.fromVector3D(s)
 	return setmetatable(s,Dir3D.mti)
 end
 
 function Dir3D:getCopy()
 	return Dir3D(self.x,self.y,self.z,self.w)
-end
-
-function Dir3D:updateMatrix()
-	self.matrix.values={{self.x},{self.y},{self.z},{self.w}}
 end
 
 function Dir3D:getDotProduct(p2)
@@ -28,17 +23,15 @@ function Dir3D:getCrossProduct(v)
 end
 
 function Dir3D:rotate(x,y,z)
-	local m=self.matrix
-	m:applyRotation(x,y,z)
-	self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
-	self:updateMatrix()
+	local qr = Quaternion.RotationFromEulerAngles(Dir3D(x,y,z))
+	local newDir = qr:rotatePoint(self)
+	self.x,self.y,self.z,self.w = newDir.x,newDir.y,newDir.z,newDir.w
 end
 
 function Dir3D:rotateAboutAxis(dir,angle)
-	local m=self.matrix
-	m:applyAxisAngleRotation(dir,angle)
-	self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
-	self:updateMatrix()
+	local rq = Quaternion.Rotation(dir,angle)
+	local newDir = rq:rotatePoint(self)
+	self.x,self.y,self.z,self.w = newDir.x,newDir.y,newDir.z,0
 end
 
 function Dir3D:getCanonical()
@@ -79,10 +72,6 @@ end
 
 function Dir3D.mti.__unm(self)
 	return Dir3D(-self.x,-self.y,-self.z,-self.w)
-end
-
-function Dir3D.fromMatrix4D(m)
-	return Dir3D(m[1][1],m[2][1],m[3][1],m[4][1])
 end
 
 setmetatable(Dir3D,Dir3D.mt)
