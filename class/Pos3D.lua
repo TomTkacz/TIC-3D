@@ -4,12 +4,7 @@ Pos3D.mti={}
 
 function Pos3D.mt.__call(self,x,y,z,w)
 	local s={x=x,y=y,z=z,w=(w or 1)}
-	s.matrix=Matrix4D.fromVector3D(s)
 	return setmetatable(s,Pos3D.mti)
-end
-
-function Pos3D:updateMatrix()
-	self.matrix.values={{self.x},{self.y},{self.z},{self.w}}
 end
 
 function Pos3D:getCopy()
@@ -21,24 +16,17 @@ function Pos3D:getDotProduct(p2)
 end
 
 function Pos3D:scale(sx,sy,sz)
-	local m=self.matrix
-	m:applyScaleFactor(sx,sy,sz)
-	self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
-	self:updateMatrix()
+	return self * Pos3D(sx,sy,sz)
 end
 
 function Pos3D:translate(tx,ty,tz)
-	local m=self.matrix
-	m:applyTranslation(tx,ty,tz)
-	self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
-	self:updateMatrix()
+	return self + Pos3D(tx,ty,tz)
 end
 
 function Pos3D:rotateAboutAxis(dir,angle)
 	local rq = Quaternion.Rotation(dir,angle)
 	local newPos = rq:rotatePoint(self)
 	self.x,self.y,self.z,self.w = newPos.x,newPos.y,newPos.z,1
-	self:updateMatrix()
 end
 
 function Pos3D:getCrossProduct(v)
@@ -49,15 +37,22 @@ function Pos3D:getCrossProduct(v)
 end
 
 function Pos3D:toLocalTransform(origin,rot,scale)
-	local scaledPoint = self*scale
+	local newPoint = self*scale
 	local rq = Quaternion.RotationFromEulerAngles(rot)
-	scaledPoint = rq:rotatePoint(scaledPoint)
-	scaledPoint = scaledPoint+origin
-	return scaledPoint
+	newPoint = rq:rotatePoint(newPoint)
+	newPoint = newPoint+origin
+	return newPoint
 end
 
 function Pos3D:toScreenSpace()
-	return self.matrix:toScreenSpace()
+	local x,y,z = self.x,self.y,self.z
+	local fd = viewport._focalDist
+	local sw,sh,vw,vh = SCREEN_WIDTH,SCREEN_HEIGHT,viewport.size.w,viewport.size.h
+	local fdz = fd/z
+	return Pos2D(
+		(fdz*x+vw/2)*(sw/vw),
+		(fdz*y+vh/2)*(sh/vh)
+	)
 end
 
 function Pos3D:getMagnitude()
@@ -80,16 +75,6 @@ function Pos3D:toCameraTransform()
 
 	return newPoint
 
-end
-
-function Pos3D:canonical()
-	local div = 1
-	if self.w ~= 0 then div=self.w end
-	return Pos3D(self.x/div,self.y/div,self.z/div,1)
-end
-
-function Pos3D.fromMatrix4D(m)
-	return Pos3D(m[1][1],m[2][1],m[3][1],m[4][1])
 end
 
 function Pos3D.mti.__add(self,v)
