@@ -74,8 +74,4 @@ function Dir3D.mti.__unm(self)
 	return Dir3D(-self.x,-self.y,-self.z,-self.w)
 end
 
-function Dir3D.fromMatrix4D(m)
-	return Dir3D(m[1][1],m[2][1],m[3][1],m[4][1])
-end
-
 setmetatable(Dir3D,Dir3D.mt)
