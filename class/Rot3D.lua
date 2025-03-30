@@ -12,9 +12,9 @@ function Rot3D.mt.__call(self,x,y,z)
 	end
 
 	function s:rotateAboutAxis(dir,angle)
-		local m=Matrix.fromVector(self)
-		m:applyAxisAngleRotation(dir,angle)
-		self.x,self.y,self.z = table.unpack(m[1])
+		local rq = Quaternion.Rotation(dir,angle)
+		local newRot = rq:rotatePoint(self)
+		self.x,self.y,self.z = newRot.x,newRot.y,newRot.z
 	end
 
 	setmetatable(s,Rot3D.mti)

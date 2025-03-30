@@ -35,9 +35,13 @@ function Dir3D:rotate(x,y,z)
 end
 
 function Dir3D:rotateAboutAxis(dir,angle)
-	local m=self.matrix
-	m:applyAxisAngleRotation(dir,angle)
-	self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
+	-- local m=self.matrix
+	-- m:applyAxisAngleRotation(dir,angle)
+	-- self.x,self.y,self.z,self.w = m[1][1],m[2][1],m[3][1],m[4][1]
+	-- self:updateMatrix()
+	local rq = Quaternion.Rotation(dir,angle)
+	local newDir = rq:rotatePoint(self)
+	self.x,self.y,self.z,self.w = newDir.x,newDir.y,newDir.z,0
 	self:updateMatrix()
 end
 

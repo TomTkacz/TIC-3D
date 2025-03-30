@@ -75,33 +75,6 @@ do
 		{0,0,0,1}
 	})
 
-	local function applyAxisAngleRotation(m,self,dir,angle)
-		local c=cosq(angle)
-		local s=sinq(angle)
-		local C=1-c
-		local x,y,z = dir.x,dir.y,dir.z
-		local xC,yC,zC,xs,ys,zs = x*C,y*C,z*C,x*s,y*s,z*s
-		local values = m.values
-
-		values[1][1] = x*xC+c
-		values[1][2] = y*xC-zs
-		values[1][3] = z*xC+ys
-		values[2][1] = y*xC+zs
-		values[2][2] = y*yC+c
-		values[2][3] = z*yC-xs
-		values[3][1] = z*xC-ys
-		values[3][2] = z*yC+xs
-		values[3][3] = z*zC+c
-		
-		self.values = (m*self).values
-	end
-	Matrix4D.applyAxisAngleRotation = Matrix.bindLocalMatrixToFunction(applyAxisAngleRotation,4,4,{
-		{0,0,0,0},
-		{0,0,0,0},
-		{0,0,0,0},
-		{0,0,0,1}
-	})
-
 	local function applyScaleFactor(m,self,sx,sy,sz)
 		local values = m.values
 		values[1][1] = sx

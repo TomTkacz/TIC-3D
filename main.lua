@@ -8,6 +8,7 @@
 include "include.Lookup"
 include "include.Utils"
 include "include.LoadObjects"
+include "class.Quaternion"
 include "class.Camera"
 include "class.Pos3D"
 include "class.Pos2D"
