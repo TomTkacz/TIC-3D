@@ -45,7 +45,9 @@ function Camera.mt.__call(self,pos,rot,dir)
 
     function s:rotate(r)
         self.rot=self.rot+r
-        self.dir:rotate(r.x,r.y,r.z)
+        local d = Z_AXIS:getCopy() -- forward vector
+        d:rotate(self.rot.x,self.rot.y,self.rot.z)
+        self.dir = d
     end
 
     function s:updateClippingPlanes()

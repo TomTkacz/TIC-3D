@@ -25,7 +25,7 @@ end
 function Dir3D:rotate(x,y,z)
 	local qr = Quaternion.RotationFromEulerAngles(Dir3D(x,y,z))
 	local newDir = qr:rotatePoint(self)
-	self.x,self.y,self.z,self.w = newDir.x,newDir.y,newDir.z,newDir.w
+	self.x,self.y,self.z,self.w = newDir.x,newDir.y,newDir.z,0
 end
 
 function Dir3D:rotateAboutAxis(dir,angle)

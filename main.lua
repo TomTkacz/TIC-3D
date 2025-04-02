@@ -214,8 +214,8 @@ function TIC()
 	end
 
 	if gmouse.down then
-		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*viewport.size.w*(gmouse.sensitivity/100)
-		camera:rotate( Rot3D(0,2*PI*(physicalSpace/viewport.size.w),0) )
+		physicalSpace = (gmouse.deltaX/SCREEN_WIDTH)*(gmouse.sensitivity/100)
+		camera:rotate( Rot3D(0,2*PI*physicalSpace,0) )
 	end
 
 	camera:updateVectors()
@@ -236,6 +236,5 @@ function TIC()
 	end
 
 	print("FPS:"..round(currentFPS,2))
-
 	t=t+1
 end
